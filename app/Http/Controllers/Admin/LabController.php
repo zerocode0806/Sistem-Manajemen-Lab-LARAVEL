@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DataLab;
+use App\Models\InventarisMeja;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LabController extends Controller
 {
@@ -30,9 +32,34 @@ class LabController extends Controller
             'status' => ['required', 'in:availabel,not available'],
         ]);
 
-        DataLab::create($validated);
+        DB::transaction(function () use ($validated) {
 
-        return redirect()->route('admin.lab.index')->with('success', 'Data lab berhasil ditambahkan.');
+            // Simpan data lab
+            $lab = DataLab::create($validated);
+
+            // Buat inventaris meja otomatis
+            $dataMeja = [];
+
+            for ($i = 1; $i <= $lab->jumlah_meja; $i++) {
+                $dataMeja[] = [
+                    'id_lab'            => $lab->id_lab,
+                    'nomor_meja'        => $i,
+                    'cpu_kondisi'       => 'normal',
+                    'keyboard_kondisi'  => 'normal',
+                    'mouse_kondisi'     => 'normal',
+                    'monitor_kondisi'   => 'normal',
+                    'kursi_kondisi'     => 'normal',
+                    'created_at'        => now(),
+                    'updated_at'        => now(),
+                ];
+            }
+
+            InventarisMeja::insert($dataMeja);
+        });
+
+        return redirect()
+            ->route('admin.lab.index')
+            ->with('success', 'Data lab dan inventaris meja berhasil ditambahkan.');
     }
 
     public function edit(DataLab $lab)

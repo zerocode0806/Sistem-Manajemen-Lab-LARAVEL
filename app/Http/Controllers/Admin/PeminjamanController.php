@@ -121,7 +121,7 @@ class PeminjamanController extends Controller
     public function riwayat()
     {
         $peminjaman = DataPinjam::with('mahasiswa')
-                         ->whereIn('status', ['disetujui', 'selesai'])
+                         ->whereIn('status', ['disetujui'])
                          ->orderByDesc('id_data')
                          ->get();
         return view('admin.peminjaman.riwayat', compact('peminjaman'));

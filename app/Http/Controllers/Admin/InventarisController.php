@@ -105,15 +105,14 @@ class InventarisController extends Controller
         $mejaRows = InventarisMeja::where('id_lab', $id_lab)->get();
 
         $periode = PeriodeInventaris::create([
-            'id_lab'       => $id_lab,
-            'bulan'        => $request->bulan,
-            'tahun'        => $request->tahun,
-            'jumlah_kursi' => $lab->jumlah_kursi,
-            'jumlah_meja'  => $mejaRows->count(),
-            'jumlah_ac'    => $acRows->count(),
-            'tanggal_catat' => now(),
-            'dicatat_oleh' => Auth::guard('admin')->user()->nama ?? 'Admin',
-            'keterangan'   => $request->keterangan,
+            'id_lab'        => $id_lab,
+            'bulan'         => $request->bulan,
+            'tahun'         => $request->tahun,
+            'jumlah_kursi'  => $lab->jumlah_kursi,
+            'jumlah_meja'   => $mejaRows->count(),
+            'jumlah_ac'     => $acRows->count(),
+            'dicatat_oleh'  => Auth::guard('admin')->user()->nama ?? 'Admin',
+            'keterangan'    => $request->keterangan,
         ]);
 
         // Snapshot AC
