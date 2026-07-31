@@ -40,7 +40,7 @@
         <div class="info-item"><span class="info-label">Nomor Kursi</span><span class="info-value mono">{{ $peminjaman->kursi ?? '-' }}</span></div>
     @endif
 
-    <div class="info-item"><span class="info-label">Tanggal</span><span class="info-value mono">{{ \Carbon\Carbon::parse($peminjaman->tanggal)->format('l, d MMMM Y', 'id') }}</span></div>
+    <div class="info-item"><span class="info-label">Tanggal</span><span class="info-value mono">{{ \Carbon\Carbon::parse($peminjaman->tanggal)->format('l, d M Y', 'id') }}</span></div>
     <div class="info-item"><span class="info-label">Jam</span><span class="info-value"><span class="time-range">{{ substr($peminjaman->jam_mulai,0,5) }} – {{ substr($peminjaman->jam_selesai,0,5) }}</span></span></div>
     <div class="info-item"><span class="info-label">Status</span><span class="info-value"><span class="badge {{ $bc }}">{{ ucfirst($peminjaman->status) }}</span></span></div>
     <div class="info-item"><span class="info-label">Diajukan</span><span class="info-value mono">{{ \Carbon\Carbon::parse($peminjaman->created_at)->format('d M Y H:i') }}</span></div>

@@ -43,7 +43,12 @@ class PeminjamanController extends Controller
     public function riwayat()
     {
         $nim = Auth::guard('mahasiswa')->user()->nim;
-        $peminjaman = DataPinjam::where('nim', $nim)->get();
+
+        $peminjaman = DataPinjam::where('nim', $nim)
+            ->whereIn('status', ['menunggu', 'disetujui'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('mahasiswa.peminjaman.riwayat', compact('peminjaman'));
     }
 
@@ -61,7 +66,12 @@ class PeminjamanController extends Controller
     public function arsip()
     {
         $nim = Auth::guard('mahasiswa')->user()->nim;
-        $peminjaman = DataPinjam::where('nim', $nim)->where('status', 'selesai')->get();
+
+        $peminjaman = DataPinjam::where('nim', $nim)
+            ->whereIn('status', ['selesai', 'ditolak'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('mahasiswa.peminjaman.arsip', compact('peminjaman'));
     }
 }

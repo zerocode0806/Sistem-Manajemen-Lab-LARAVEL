@@ -83,7 +83,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .topbar { display: none; position: fixed; top: 0; left: 0; right: 0; height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); align-items: center; justify-content: space-between; padding: 0 16px; z-index: 900; }
 .topbar-title { font-size: 14px; font-weight: 600; }
 .btn-icon { width: 36px; height: 36px; border: 1px solid var(--border); background: var(--surface); border-radius: 7px; display: grid; place-items: center; cursor: pointer; font-size: 16px; color: var(--text); }
-.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 999; }
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3); z-itabsndex: 999; }
 
 /* ── MAIN ── */
 .main { margin-left: var(--sidebar-w); padding: 32px 36px; min-height: 100vh; }
@@ -115,8 +115,27 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .btn-blue { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; background: var(--blue); color: #fff; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500; cursor: pointer; text-decoration: none; transition: opacity .15s; white-space: nowrap; }
 .btn-blue:hover { opacity: .85; color: #fff; }
 
+/* ── FILTER TABS ── */
+.filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.filter-tab {
+    padding: 6px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+}
+
+.filter-tab:hover { background: var(--bg); color: var(--text); }
+.filter-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
 /* ── TABLE ── */
-.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: auto; }
 table { width: 100%; border-collapse: collapse; }
 thead th { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
 tbody td { padding: 13px 14px; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: middle; }
