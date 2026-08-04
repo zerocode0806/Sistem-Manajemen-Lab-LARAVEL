@@ -86,7 +86,7 @@
         <div class="card-header-icon"><i class="bi bi-grid-3x3"></i></div>
         <h2>Inventaris Meja & Perangkat</h2>
     </div>
-    <div style="overflow:hidden;border-radius:8px;border:1px solid var(--border)">
+    <div style="overflow:auto;border-radius:8px;border:1px solid var(--border)">
         <table>
             <thead>
                 <tr>

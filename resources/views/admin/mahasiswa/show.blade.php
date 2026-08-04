@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1.5fr;gap:20px;align-items:start">
+<div style="display:grid;grid-template-rows:1fr 100%;gap:20px;align-items:start">
     <div class="card">
         <div class="card-header">
             <div class="card-header-icon"><i class="bi bi-person"></i></div>
@@ -32,7 +32,7 @@
             <div class="card-header-icon"><i class="bi bi-clock-history"></i></div>
             <h2>Riwayat Peminjaman</h2>
         </div>
-        <div style="overflow:hidden;border-radius:6px;border:1px solid var(--border)">
+        <div style="overflow:auto;border-radius:6px;border:1px solid var(--border)">
             <table>
                 <thead><tr><th>Jenis</th><th>Tanggal</th><th>Status</th></tr></thead>
                 <tbody>
