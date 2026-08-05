@@ -23,7 +23,7 @@
     <a href="{{ url()->previous() }}" class="btn-secondary"><i class="bi bi-arrow-left"></i> Kembali</a>
 </div>
 
-<div style="display:grid;grid-template-rows:1fr 1fr;gap:20px;margin-bottom:20px">
+<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(350px,1fr));gap:20px;margin-bottom:20px">
     <div class="card">
         <div class="card-header">
             <div class="card-header-icon"><i class="bi bi-person"></i></div>

@@ -43,6 +43,25 @@ class PeminjamanController extends Controller
             'kursi'       => ['nullable', 'integer', 'min:1'],
         ]);
 
+        // Validate kursi not already taken for lab booking
+        if ($validated['jenis'] === 'lab' && !empty($validated['kursi'])) {
+            $conflict = DataPinjam::where('nama_lab', $validated['nama_lab'])
+                ->where('jenis', 'lab')
+                ->where('tanggal', $validated['tanggal'])
+                ->whereIn('status', ['menunggu', 'disetujui'])
+                ->where('kursi', $validated['kursi'])
+                ->where(function ($q) use ($validated) {
+                    $q->where('jam_mulai', '<', $validated['jam_selesai'])
+                      ->where('jam_selesai', '>', $validated['jam_mulai']);
+                })
+                ->exists();
+
+            if ($conflict) {
+                return back()->withInput()
+                    ->withErrors(['kursi' => 'Meja ' . $validated['kursi'] . ' sudah dipesan untuk jadwal yang dipilih.']);
+            }
+        }
+
         $validated['status'] = 'menunggu';
         DataPinjam::create($validated);
 
@@ -121,7 +140,7 @@ class PeminjamanController extends Controller
     public function riwayat()
     {
         $peminjaman = DataPinjam::with('mahasiswa')
-                         ->whereIn('status', ['disetujui'])
+                         ->whereIn('status', ['disetujui', 'selesai'])
                          ->orderByDesc('id_data')
                          ->get();
         return view('admin.peminjaman.riwayat', compact('peminjaman'));
@@ -134,5 +153,47 @@ class PeminjamanController extends Controller
                          ->orderByDesc('id_data')
                          ->get();
         return view('admin.peminjaman.arsip', compact('peminjaman'));
+    }
+
+    /**
+     * AJAX – return taken seats for a given lab / date / time window.
+     * Used by the Seat Picker component.
+     *
+     * GET /admin/peminjaman/check-seats?nama_lab=X&tanggal=Y&jam_mulai=Z&jam_selesai=W
+     */
+    public function checkSeats(Request $request)
+    {
+        $request->validate([
+            'nama_lab'    => 'required|string',
+            'tanggal'     => 'required|date',
+            'jam_mulai'   => 'required',
+            'jam_selesai' => 'required',
+        ]);
+
+        $lab = DataLab::where('nama_lab', $request->nama_lab)->first();
+
+        if (!$lab) {
+            return response()->json(['total_kursi' => 0, 'taken' => []]);
+        }
+
+        // Find taken (booked) seats: same lab, same date, overlapping time, active status
+        $taken = DataPinjam::where('nama_lab', $request->nama_lab)
+            ->where('jenis', 'lab')
+            ->where('tanggal', $request->tanggal)
+            ->whereIn('status', ['menunggu', 'disetujui'])
+            ->whereNotNull('kursi')
+            ->where(function ($q) use ($request) {
+                $q->where('jam_mulai', '<', $request->jam_selesai)
+                  ->where('jam_selesai', '>', $request->jam_mulai);
+            })
+            ->pluck('kursi')
+            ->map(fn($v) => (int) $v)
+            ->values()
+            ->toArray();
+
+        return response()->json([
+            'total_kursi' => (int) $lab->jumlah_kursi,
+            'taken'       => $taken,
+        ]);
     }
 }
