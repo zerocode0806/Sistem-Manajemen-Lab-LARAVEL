@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<div style="display:grid;grid-template-rows:1fr 100%;gap:20px;align-items:start">
+<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(350px,1fr));gap:20px;align-items:start">
     <div class="card">
         <div class="card-header">
             <div class="card-header-icon"><i class="bi bi-person"></i></div>
