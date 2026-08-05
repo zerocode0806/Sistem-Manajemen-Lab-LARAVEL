@@ -349,7 +349,20 @@
     // Grup 0 (kiri):  offset 5  → seats 6,7,8
     var GROUP_OFFSET  = [5, 3, 0]; // indexed same as GROUP_SIZES
 
-    var SEAT_CHECK_URL = '{{ $seatCheckUrl ?? "" }}';
+    // Laravel route() menghasilkan URL absolut berdasarkan APP_URL (.env),
+    // yang biasanya "localhost" — tidak bisa diakses dari HP fisik.
+    // Solusi: ambil path-nya saja, gabungkan dengan origin browser saat fetch.
+    var _rawUrl = '{{ $seatCheckUrl ?? "" }}';
+    var SEAT_CHECK_PATH = (function () {
+        try {
+            // Jika absolut → ambil hanya path+query
+            var u = new URL(_rawUrl);
+            return u.pathname + u.search;
+        } catch (e) {
+            // Sudah relatif, pakai langsung
+            return _rawUrl;
+        }
+    })();
 
     var currentTotal    = 0;
     var currentTaken    = [];
@@ -484,7 +497,8 @@
         document.getElementById('spKursiInput').value = '';
         document.getElementById('spSelectedInfo').style.display = 'none';
 
-        var url = new URL(SEAT_CHECK_URL, window.location.origin);
+        // Gunakan origin browser yang aktif + path — aman di HP fisik maupun desktop
+        var url = new URL(SEAT_CHECK_PATH, window.location.origin);
         url.searchParams.set('nama_lab',    labName);
         url.searchParams.set('tanggal',     tanggal);
         url.searchParams.set('jam_mulai',   jamMulai);
