@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\InventarisController      as AdminInventarisContr
 use App\Http\Controllers\Admin\AkunController            as AdminAkunController;
 use App\Http\Controllers\Mahasiswa\DashboardController   as MahasiswaDashboardController;
 use App\Http\Controllers\Mahasiswa\PeminjamanController  as MahasiswaPeminjamanController;
+use App\Http\Controllers\Mahasiswa\ProfileController      as MahasiswaProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -102,6 +103,8 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
 Route::middleware(['auth:mahasiswa'])->prefix('mahasiswa')->name('mahasiswa.')->group(function () {
 
     Route::get('/dashboard', [MahasiswaDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profil',   [MahasiswaProfileController::class, 'edit'])->name('profil.edit');
+    Route::put('/profil',   [MahasiswaProfileController::class, 'update'])->name('profil.update');
     Route::post('/logout',   [MahasiswaAuthController::class, 'logout'])->name('logout');
 
     // Peminjaman – seat check must be BEFORE wildcard {peminjaman}

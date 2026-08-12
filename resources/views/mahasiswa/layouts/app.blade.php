@@ -83,7 +83,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .topbar { display: none; position: fixed; top: 0; left: 0; right: 0; height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); align-items: center; justify-content: space-between; padding: 0 16px; z-index: 900; }
 .topbar-title { font-size: 14px; font-weight: 600; }
 .btn-icon { width: 36px; height: 36px; border: 1px solid var(--border); background: var(--surface); border-radius: 7px; display: grid; place-items: center; cursor: pointer; font-size: 16px; color: var(--text); }
-.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3); z-itabsndex: 999; }
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 999; }
 
 /* ── MAIN ── */
 .main { margin-left: var(--sidebar-w); padding: 32px 36px; min-height: 100vh; }
@@ -135,7 +135,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .filter-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 /* ── TABLE ── */
-.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: auto; }
+.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 table { width: 100%; border-collapse: collapse; }
 thead th { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
 tbody td { padding: 13px 14px; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: middle; }
@@ -275,6 +275,15 @@ tbody tr:hover { background: var(--bg); }
         <li class="nav-item">
             <a class="nav-link @if(request()->routeIs('mahasiswa.peminjaman.arsip')) active @endif" href="{{ route('mahasiswa.peminjaman.arsip') }}">
                 <i class="bi bi-archive-fill"></i> Arsip
+            </a>
+        </li>
+    </ul>
+
+    <p class="nav-section">Akun</p>
+    <ul style="list-style:none;padding:0;margin:0">
+        <li class="nav-item">
+            <a class="nav-link @if(request()->routeIs('mahasiswa.profil.*')) active @endif" href="{{ route('mahasiswa.profil.edit') }}">
+                <i class="bi bi-person-circle"></i> Profil Saya
             </a>
         </li>
     </ul>
