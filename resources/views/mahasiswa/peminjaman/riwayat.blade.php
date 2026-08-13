@@ -21,7 +21,16 @@
         </thead>
         <tbody id="tableBody">
             @forelse($peminjaman as $p)
-            @php $bc = ['selesai'=>'badge-selesai','ditolak'=>'badge-ditolak'][$p->status] ?? 'badge-default'; @endphp
+            @php
+                $status = strtolower(trim($p->status));
+
+                $bc = [
+                    'menunggu'  => 'badge-menunggu',
+                    'disetujui' => 'badge-disetujui',
+                    'ditolak'   => 'badge-ditolak',
+                    'selesai'   => 'badge-selesai',
+                ][$status] ?? 'badge-default';
+            @endphp
             <tr>
                 <td>
                     @if($p->jenis === 'barang')
@@ -32,7 +41,11 @@
                 </td>
                 <td style="font-weight:500">{{ $p->jenis === 'barang' ? $p->nama_barang : $p->nama_lab }}</td>
                 <td class="mono">{{ \Carbon\Carbon::parse($p->tanggal)->format('d M Y') }}</td>
-                <td><span class="badge {{ $bc }}">{{ ucfirst($p->status) }}</span></td>
+                <td>
+                    <span class="badge {{ $bc }}">
+                        {{ ucfirst($status) }}
+                    </span>
+                </td>
                 <td><a href="{{ route('mahasiswa.peminjaman.show', $p->id_data) }}" class="btn-detail"><i class="bi bi-eye"></i> Detail</a></td>
             </tr>
             @empty

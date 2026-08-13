@@ -57,7 +57,7 @@ class PeminjamanController extends Controller
         DataPinjam::create($validated);
 
         return redirect()->route('mahasiswa.peminjaman.riwayat')
-                         ->with('success', 'Peminjaman berhasil diajukan.');
+                        ->with('success', 'Peminjaman berhasil diajukan. Silakan ke ICT untuk menyerahkan kartu identitas sebagai jaminan sebelum peminjaman disetujui Aslab.');
     }
 
     public function riwayat()
