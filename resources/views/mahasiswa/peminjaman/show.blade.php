@@ -55,7 +55,10 @@
     <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
     <div style="display:flex;align-items:center;gap:8px">
         <i class="bi bi-x-circle" style="color:var(--red)"></i>
-        <span style="font-size:13px;color:var(--red)">Permintaan Anda telah ditolak. Hubungi admin untuk informasi lebih lanjut.</span>
+        <span style="font-size:13px;color:var(--red)">
+            Permintaan Anda telah ditolak. Silakan datang ke ICT untuk mengetahui informasi lebih lanjut
+            atau hubungi admin melalui <strong>+62-851-7520-2106</strong>.
+        </span>
     </div>
     @elseif($peminjaman->status === 'disetujui')
     <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
