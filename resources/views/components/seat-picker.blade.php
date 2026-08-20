@@ -521,15 +521,32 @@
     }
 
     function checkAndFetch() {
-        if (getVal('jenisLab') !== 'lab') return;
-        var labEl    = document.getElementById('namaLabSelect');
-        var labName  = labEl && labEl.selectedIndex >= 0 ? labEl.options[labEl.selectedIndex].value : '';
-        var tanggal  = getVal('tanggalInput');
-        var jamMulai = getVal('jamMulaiInput');
-        var jamSelesai = getVal('jamSelesaiInput');
+        const jenisElement = document.querySelector(
+            'input[name="jenis"]:checked'
+        );
+
+        if (jenisElement && jenisElement.value !== 'lab') {
+            return;
+        }
+
+        const labElement = document.getElementById('namaLabSelect');
+
+        const labName = labElement &&
+            labElement.selectedIndex >= 0
+            ? labElement.options[labElement.selectedIndex].value
+            : '';
+
+        const tanggal = getVal('tanggalInput');
+        const jamMulai = getVal('jamMulaiInput');
+        const jamSelesai = getVal('jamSelesaiInput');
 
         if (labName && tanggal && jamMulai && jamSelesai) {
-            fetchSeats(labName, tanggal, jamMulai, jamSelesai);
+            fetchSeats(
+                labName,
+                tanggal,
+                jamMulai,
+                jamSelesai
+            );
         }
     }
 
