@@ -64,7 +64,9 @@
             @enderror
         </div>
 
-        {{-- SECTION INTERNAL --}}
+        {{-- ═══════════════════════════════════════════ --}}
+        {{-- SECTION INTERNAL                           --}}
+        {{-- ═══════════════════════════════════════════ --}}
         <div id="section_internal">
 
             {{-- MAHASISWA --}}
@@ -221,9 +223,12 @@
             </div>
         </div>
 
-        {{-- SECTION EKSTERNAL --}}
+        {{-- ═══════════════════════════════════════════ --}}
+        {{-- SECTION EKSTERNAL                          --}}
+        {{-- ═══════════════════════════════════════════ --}}
         <div id="section_eksternal" style="display:none">
 
+            {{-- Info biaya --}}
             <div style="
                 background:var(--yellow-soft,#fef9ec);
                 border:1px solid var(--yellow,#f5c518);
@@ -232,23 +237,19 @@
                 margin-bottom:16px;
                 font-size:13px
             ">
-                <i
-                    class="bi bi-info-circle"
-                    style="color:var(--yellow,#f5c518)"
-                ></i>
-
+                <i class="bi bi-info-circle" style="color:var(--yellow,#f5c518)"></i>
                 Peminjaman lab oleh instansi/perusahaan dikenakan biaya
                 <strong>Rp 75.000 / hari</strong>.
                 Total biaya dihitung otomatis.
             </div>
 
+            {{-- Baris 1: nama instansi + PIC --}}
             <div class="field-row">
                 <div class="field-group">
                     <label for="nama_instansi">
                         Nama Instansi / Perusahaan
                         <span style="color:var(--red)">*</span>
                     </label>
-
                     <input
                         type="text"
                         id="nama_instansi"
@@ -256,7 +257,6 @@
                         value="{{ old('nama_instansi') }}"
                         placeholder="PT. Contoh Jaya"
                     >
-
                     @error('nama_instansi')
                         <span class="field-error">{{ $message }}</span>
                     @enderror
@@ -267,7 +267,6 @@
                         Nama PIC / Penanggung Jawab
                         <span style="color:var(--red)">*</span>
                     </label>
-
                     <input
                         type="text"
                         id="pic_instansi"
@@ -275,20 +274,19 @@
                         value="{{ old('pic_instansi') }}"
                         placeholder="Budi Santoso"
                     >
-
                     @error('pic_instansi')
                         <span class="field-error">{{ $message }}</span>
                     @enderror
                 </div>
             </div>
 
+            {{-- Baris 2: kontak + lab --}}
             <div class="field-row">
                 <div class="field-group">
                     <label for="kontak_instansi">
                         No. Telepon / Email PIC
                         <span style="color:var(--red)">*</span>
                     </label>
-
                     <input
                         type="text"
                         id="kontak_instansi"
@@ -296,7 +294,6 @@
                         value="{{ old('kontak_instansi') }}"
                         placeholder="08xxxxxxxxxx"
                     >
-
                     @error('kontak_instansi')
                         <span class="field-error">{{ $message }}</span>
                     @enderror
@@ -307,14 +304,12 @@
                         Laboratorium
                         <span style="color:var(--red)">*</span>
                     </label>
-
                     <select
                         id="namaLabEksternal"
                         name="nama_lab"
                         onchange="hitungBiaya()"
                     >
                         <option value="">— Pilih Lab —</option>
-
                         @foreach($labs as $lab)
                             <option
                                 value="{{ $lab->nama_lab }}"
@@ -324,20 +319,87 @@
                             </option>
                         @endforeach
                     </select>
-
                     @error('nama_lab')
                         <span class="field-error">{{ $message }}</span>
                     @enderror
                 </div>
             </div>
-        </div>
+
+            {{-- Baris 3: alamat instansi (full width) --}}
+            <div class="field-group">
+                <label for="alamat_instansi">
+                    Alamat Instansi
+                    <span style="color:var(--red)">*</span>
+                </label>
+                <input
+                    type="text"
+                    id="alamat_instansi"
+                    name="alamat_instansi"
+                    value="{{ old('alamat_instansi') }}"
+                    placeholder="Jl. Contoh No. 1, Kota"
+                >
+                @error('alamat_instansi')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
+
+            {{-- Baris 4: keperluan (full width) --}}
+            <div class="field-group">
+                <label for="keperluan">
+                    Keperluan / Tujuan Peminjaman
+                    <span style="color:var(--red)">*</span>
+                </label>
+                <textarea
+                    id="keperluan"
+                    name="keperluan"
+                    rows="3"
+                    placeholder="Jelaskan tujuan penggunaan laboratorium..."
+                    style="
+                        width:100%;
+                        padding:8px 12px;
+                        border:1px solid var(--border);
+                        border-radius:8px;
+                        font-family:DM Sans,sans-serif;
+                        font-size:13.5px;
+                        resize:vertical;
+                        outline:none;
+                        background:var(--surface-1);
+                        color:var(--text)
+                    "
+                >{{ old('keperluan') }}</textarea>
+                @error('keperluan')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
+
+            {{-- Baris 5: no surat opsional --}}
+            <div class="field-group">
+                <label for="no_surat">
+                    No. Surat / MOU
+                    <span style="font-size:12px;color:var(--muted);font-weight:400">
+                        (opsional)
+                    </span>
+                </label>
+                <input
+                    type="text"
+                    id="no_surat"
+                    name="no_surat"
+                    value="{{ old('no_surat') }}"
+                    placeholder="Contoh: 001/MOU/2024"
+                >
+                @error('no_surat')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
+
+        </div>{{-- end section_eksternal --}}
 
         {{-- TANGGAL DAN JAM --}}
         <div class="field-row">
             <div class="field-group">
                 <label for="tanggalInput">
                     Tanggal
-                    <span id="labelTanggal">Mulai</span>
+                    <span id="labelTanggal"></span>
                     <span style="color:var(--red)">*</span>
                 </label>
 
@@ -445,32 +507,12 @@
                 margin-bottom:16px
             "
         >
-            <div style="
-                font-size:13px;
-                color:var(--muted);
-                margin-bottom:6px
-            ">
+            <div style="font-size:13px;color:var(--muted);margin-bottom:6px">
                 Estimasi Biaya
             </div>
-
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center
-            ">
-                <span
-                    style="font-size:13.5px"
-                    id="biayaDetail"
-                >
-                    — hari × Rp 75.000
-                </span>
-
-                <span
-                    style="font-size:18px;font-weight:600;color:var(--primary)"
-                    id="biayaTotal"
-                >
-                    Rp 0
-                </span>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:13.5px" id="biayaDetail">— hari × Rp 75.000</span>
+                <span style="font-size:18px;font-weight:600;color:var(--primary)" id="biayaTotal">Rp 0</span>
             </div>
         </div>
 
@@ -484,31 +526,17 @@
         @error('kursi')
             <span
                 class="field-error"
-                style="
-                    display:block;
-                    margin-top:-12px;
-                    margin-bottom:12px
-                "
+                style="display:block;margin-top:-12px;margin-bottom:12px"
             >
                 {{ $message }}
             </span>
         @enderror
 
         <div class="form-actions">
-            <a
-                href="{{ route('admin.peminjaman.index') }}"
-                class="btn-secondary"
-            >
-                Batal
-            </a>
-
+            <a href="{{ route('admin.peminjaman.index') }}" class="btn-secondary">Batal</a>
             <div class="form-actions-right">
-                <button
-                    type="submit"
-                    class="btn-primary"
-                >
-                    <i class="bi bi-check2"></i>
-                    Buat Peminjaman
+                <button type="submit" class="btn-primary">
+                    <i class="bi bi-check2"></i> Buat Peminjaman
                 </button>
             </div>
         </div>
@@ -530,322 +558,141 @@
     }
 
     function isInternalLab() {
-        return (
-            getTipePemohon() === 'internal' &&
-            getJenisPeminjaman() === 'lab'
-        );
+        return getTipePemohon() === 'internal' && getJenisPeminjaman() === 'lab';
     }
 
-    /*
-     * Penting:
-     * Hanya select yang aktif yang boleh dikirim ke server.
-     *
-     * Jika dua select sama-sama memakai name="nama_lab"
-     * tetapi tidak di-disable, browser akan mengirim dua value.
-     * Value dari select terakhir dapat menimpa value internal.
-     */
     function updateLabSelectState() {
-        const labInternal =
-            document.getElementById('namaLabSelect');
-
-        const labEksternal =
-            document.getElementById('namaLabEksternal');
-
-        const isInternal =
-            getTipePemohon() === 'internal';
-
-        const isLab =
-            getJenisPeminjaman() === 'lab';
+        const labInternal  = document.getElementById('namaLabSelect');
+        const labEksternal = document.getElementById('namaLabEksternal');
+        const isInternal   = getTipePemohon() === 'internal';
+        const isLab        = getJenisPeminjaman() === 'lab';
 
         if (labInternal) {
             labInternal.disabled = !isInternal;
-            labInternal.required = isInternal && isLab;
+            labInternal.required  = isInternal && isLab;
         }
-
         if (labEksternal) {
             labEksternal.disabled = isInternal;
-            labEksternal.required = !isInternal;
+            labEksternal.required  = !isInternal;
         }
     }
 
     function updateSeatPickerVisibility() {
-        const seatPickerSection =
-            document.getElementById('seatPickerSection');
+        const seatPickerSection = document.getElementById('seatPickerSection');
+        const kursiInput        = document.getElementById('spKursiInput');
 
-        const kursiInput =
-            document.getElementById('spKursiInput');
+        if (!seatPickerSection || !kursiInput) return;
 
-        if (!seatPickerSection || !kursiInput) {
-            return;
-        }
+        const shouldShow = isInternalLab();
 
-        const shouldShow =
-            isInternalLab();
+        seatPickerSection.style.display = shouldShow ? '' : 'none';
+        kursiInput.required = shouldShow;
 
-        seatPickerSection.style.display =
-            shouldShow ? '' : 'none';
-
-        kursiInput.required =
-            shouldShow;
-
-        if (!shouldShow) {
-            kursiInput.value = '';
-        }
-
-        if (shouldShow && window.SeatPicker) {
-            window.SeatPicker.checkAndFetch();
-        }
+        if (!shouldShow) kursiInput.value = '';
+        if (shouldShow && window.SeatPicker) window.SeatPicker.checkAndFetch();
     }
 
     function toggleTipe(tipe) {
-        const isInternal =
-            tipe === 'internal';
+        const isInternal = tipe === 'internal';
 
-        const sectionInternal =
-            document.getElementById('section_internal');
+        document.getElementById('section_internal').style.display  = isInternal ? '' : 'none';
+        document.getElementById('section_eksternal').style.display = isInternal ? 'none' : '';
+        document.getElementById('fieldTanggalSelesai').style.display = isInternal ? 'none' : '';
 
-        const sectionEksternal =
-            document.getElementById('section_eksternal');
+        const biayaBox = document.getElementById('biayaBox');
+        if (biayaBox && isInternal) biayaBox.style.display = 'none';
 
-        const fieldTanggalSelesai =
-            document.getElementById('fieldTanggalSelesai');
+        const labelTanggal = document.getElementById('labelTanggal');
+        if (labelTanggal) labelTanggal.textContent = isInternal ? '' : 'Mulai';
 
-        const biayaBox =
-            document.getElementById('biayaBox');
+        // Required fields
+        const fields = {
+            'tanggalSelesaiInput' : !isInternal,
+            'nim'                 : isInternal,
+            'nama_instansi'       : !isInternal,
+            'pic_instansi'        : !isInternal,
+            'kontak_instansi'     : !isInternal,
+            'alamat_instansi'     : !isInternal,  // ← baru
+            'keperluan'           : !isInternal,  // ← baru
+        };
 
-        if (sectionInternal) {
-            sectionInternal.style.display =
-                isInternal ? '' : 'none';
-        }
-
-        if (sectionEksternal) {
-            sectionEksternal.style.display =
-                isInternal ? 'none' : '';
-        }
-
-        if (fieldTanggalSelesai) {
-            fieldTanggalSelesai.style.display =
-                isInternal ? 'none' : '';
-        }
-
-        if (biayaBox && isInternal) {
-            biayaBox.style.display = 'none';
-        }
-
-        const tanggalSelesaiInput =
-            document.getElementById('tanggalSelesaiInput');
-
-        const nimInput =
-            document.getElementById('nim');
-
-        const namaInstansiInput =
-            document.getElementById('nama_instansi');
-
-        const picInstansiInput =
-            document.getElementById('pic_instansi');
-
-        const kontakInstansiInput =
-            document.getElementById('kontak_instansi');
-
-        if (tanggalSelesaiInput) {
-            tanggalSelesaiInput.required =
-                !isInternal;
-        }
-
-        if (nimInput) {
-            nimInput.required =
-                isInternal;
-        }
-
-        if (namaInstansiInput) {
-            namaInstansiInput.required =
-                !isInternal;
-        }
-
-        if (picInstansiInput) {
-            picInstansiInput.required =
-                !isInternal;
-        }
-
-        if (kontakInstansiInput) {
-            kontakInstansiInput.required =
-                !isInternal;
-        }
-
-        const labelTanggal =
-            document.getElementById('labelTanggal');
-
-        if (labelTanggal) {
-            labelTanggal.textContent =
-                isInternal ? '' : 'Mulai';
-        }
+        Object.entries(fields).forEach(([id, req]) => {
+            const el = document.getElementById(id);
+            if (el) el.required = req;
+        });
 
         updateLabSelectState();
         updateSeatPickerVisibility();
     }
 
     function toggleJenis(jenis) {
-        const sectionLabInternal =
-            document.getElementById('section_lab_internal');
+        const sectionLabInternal = document.getElementById('section_lab_internal');
+        const sectionBarang      = document.getElementById('section_barang');
 
-        const sectionBarang =
-            document.getElementById('section_barang');
-
-        if (sectionLabInternal) {
-            sectionLabInternal.style.display =
-                jenis === 'lab' ? '' : 'none';
-        }
-
-        if (sectionBarang) {
-            sectionBarang.style.display =
-                jenis === 'barang' ? '' : 'none';
-        }
+        if (sectionLabInternal) sectionLabInternal.style.display = jenis === 'lab'    ? '' : 'none';
+        if (sectionBarang)      sectionBarang.style.display      = jenis === 'barang' ? '' : 'none';
 
         updateLabSelectState();
         updateSeatPickerVisibility();
 
-        if (
-            jenis === 'lab' &&
-            isInternalLab() &&
-            window.SeatPicker
-        ) {
+        if (jenis === 'lab' && isInternalLab() && window.SeatPicker) {
             window.SeatPicker.checkAndFetch();
         }
     }
 
     function onLabChange() {
-        if (isInternalLab() && window.SeatPicker) {
-            window.SeatPicker.checkAndFetch();
-        }
+        if (isInternalLab() && window.SeatPicker) window.SeatPicker.checkAndFetch();
     }
 
     function onScheduleChange() {
-        if (isInternalLab() && window.SeatPicker) {
-            window.SeatPicker.checkAndFetch();
-        }
-
-        if (!isInternalLab()) {
-            hitungBiaya();
-        }
+        if (isInternalLab() && window.SeatPicker) window.SeatPicker.checkAndFetch();
+        if (!isInternalLab()) hitungBiaya();
     }
 
     function hitungBiaya() {
-        const tanggalMulai =
-            document.getElementById('tanggalInput')?.value;
+        const tgl1 = document.getElementById('tanggalInput')?.value;
+        const tgl2 = document.getElementById('tanggalSelesaiInput')?.value;
+        if (!tgl1 || !tgl2) return;
 
-        const tanggalSelesai =
-            document.getElementById('tanggalSelesaiInput')?.value;
+        const hari  = Math.max(1, Math.round((new Date(tgl2) - new Date(tgl1)) / 86400000) + 1);
+        const total = hari * 75000;
 
-        if (!tanggalMulai || !tanggalSelesai) {
-            return;
-        }
-
-        const startDate =
-            new Date(tanggalMulai);
-
-        const endDate =
-            new Date(tanggalSelesai);
-
-        const difference =
-            Math.round(
-                (endDate - startDate) /
-                (1000 * 60 * 60 * 24)
-            );
-
-        const jumlahHari =
-            Math.max(1, difference + 1);
-
-        const totalBiaya =
-            jumlahHari * 75000;
-
-        const biayaDetail =
-            document.getElementById('biayaDetail');
-
-        const biayaTotal =
-            document.getElementById('biayaTotal');
-
-        const biayaBox =
-            document.getElementById('biayaBox');
-
-        if (biayaDetail) {
-            biayaDetail.textContent =
-                jumlahHari + ' hari × Rp 75.000';
-        }
-
-        if (biayaTotal) {
-            biayaTotal.textContent =
-                'Rp ' + totalBiaya.toLocaleString('id-ID');
-        }
-
-        if (biayaBox) {
-            biayaBox.style.display = '';
-        }
+        document.getElementById('biayaDetail').textContent = hari + ' hari × Rp 75.000';
+        document.getElementById('biayaTotal').textContent  = 'Rp ' + total.toLocaleString('id-ID');
+        document.getElementById('biayaBox').style.display  = '';
     }
 
     function setNamaBarang(selectElement) {
-        const option =
-            selectElement.options[selectElement.selectedIndex];
+        const opt = selectElement.options[selectElement.selectedIndex];
+        const namaBarangInput = document.getElementById('nama_barang_hidden');
+        if (namaBarangInput) namaBarangInput.value = opt.getAttribute('data-nama') || '';
 
-        const namaBarangInput =
-            document.getElementById('nama_barang_hidden');
+        const labInternalSelect = document.getElementById('namaLabSelect');
+        if (!labInternalSelect) return;
 
-        if (namaBarangInput) {
-            namaBarangInput.value =
-                option.getAttribute('data-nama') || '';
-        }
-
-        const labInternalSelect =
-            document.getElementById('namaLabSelect');
-
-        if (!labInternalSelect) {
-            return;
-        }
-
-        const labName =
-            option.getAttribute('data-lab') || '';
-
-        for (
-            let index = 0;
-            index < labInternalSelect.options.length;
-            index++
-        ) {
-            if (
-                labInternalSelect.options[index].value === labName
-            ) {
-                labInternalSelect.selectedIndex = index;
+        const labName = opt.getAttribute('data-lab') || '';
+        for (let i = 0; i < labInternalSelect.options.length; i++) {
+            if (labInternalSelect.options[i].value === labName) {
+                labInternalSelect.selectedIndex = i;
                 break;
             }
         }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        const tipePemohon =
-            @json(old('tipe_pemohon', 'internal'));
+        const tipe  = @json(old('tipe_pemohon', 'internal'));
+        const jenis = @json(old('jenis', 'lab'));
 
-        const jenisPeminjaman =
-            @json(old('jenis', 'lab'));
-
-        /*
-         * Urutan penting:
-         * 1. Tipe pemohon.
-         * 2. Jenis peminjaman.
-         * 3. Status select lab.
-         * 4. Status seat picker.
-         */
-        toggleTipe(tipePemohon);
-        toggleJenis(jenisPeminjaman);
+        toggleTipe(tipe);
+        toggleJenis(jenis);
         updateLabSelectState();
         updateSeatPickerVisibility();
 
         if (isInternalLab() && window.SeatPicker) {
-            setTimeout(function () {
-                window.SeatPicker.checkAndFetch();
-            }, 100);
+            setTimeout(() => window.SeatPicker.checkAndFetch(), 100);
         }
 
-        if (tipePemohon === 'eksternal') {
-            hitungBiaya();
-        }
+        if (tipe === 'eksternal') hitungBiaya();
     });
 </script>
 @endpush

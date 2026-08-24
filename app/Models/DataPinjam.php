@@ -39,6 +39,9 @@ class DataPinjam extends Model
         'biaya_per_hari',
         'total_biaya',
         'status_pembayaran',
+        'alamat_instansi',
+        'keperluan',
+        'no_surat',
     ];
 
     public function mahasiswa()

@@ -66,6 +66,10 @@ class PeminjamanController extends Controller
             $rules['kontak_instansi'] = ['required', 'string', 'max:50'];
             $rules['nama_lab']        = ['required', 'string', 'max:100'];
             $rules['tanggal_selesai'] = ['required', 'date', 'after_or_equal:tanggal'];
+            // Tambahkan ke $rules bagian eksternal
+            $rules['alamat_instansi'] = ['required', 'string', 'max:255'];
+            $rules['keperluan']       = ['required', 'string'];
+            $rules['no_surat']        = ['nullable', 'string', 'max:100'];
         }
 
         $validated = $request->validate($rules);
@@ -130,11 +134,13 @@ class PeminjamanController extends Controller
             $data['nama_instansi']    = $validated['nama_instansi'];
             $data['pic_instansi']     = $validated['pic_instansi'];
             $data['kontak_instansi']  = $validated['kontak_instansi'];
+            $data['alamat_instansi']  = $validated['alamat_instansi'];  // ← baru
+            $data['keperluan']        = $validated['keperluan'];        // ← baru
+            $data['no_surat']         = $validated['no_surat'] ?? null; // ← baru (nullable)
             $data['durasi_hari']      = $durasiHari;
             $data['biaya_per_hari']   = 75000;
             $data['total_biaya']      = $totalBiaya;
             $data['status_pembayaran']= 'belum_bayar';
-            // Eksternal langsung disetujui karena admin yang input
             $data['status']           = 'disetujui';
         }
 
