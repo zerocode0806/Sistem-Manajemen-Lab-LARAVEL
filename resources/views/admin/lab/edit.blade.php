@@ -16,7 +16,8 @@
 </div>
 
 <div class="form-card">
-    <form action="{{ route('admin.lab.update', $lab->id_lab) }}" method="POST">
+    <!-- TAMBAHKAN ID PADA FORM UTAMA (contoh: id="form-update") -->
+    <form action="{{ route('admin.lab.update', $lab->id_lab) }}" method="POST" id="form-update">
         @csrf @method('PUT')
 
         <div class="field-group">
@@ -61,17 +62,22 @@
         </div>
 
         <div class="form-actions">
-            <form action="{{ route('admin.lab.destroy', $lab->id_lab) }}" method="POST" style="margin:0">
-                @csrf @method('DELETE')
-                <button type="submit" class="btn-danger-outline" onclick="return confirm('Hapus lab {{ $lab->nama_lab }}? Semua data terkait akan ikut terhapus.')">
-                    <i class="bi bi-trash"></i> Hapus Lab
-                </button>
-            </form>
+            <!-- PANGGIL FORM DELETE VIA ATRIBUT form="form-delete" -->
+            <button type="submit" form="form-delete" class="btn-danger-outline" onclick="return confirm('Hapus lab {{ $lab->nama_lab }}? Semua data terkait akan ikut terhapus.')">
+                <i class="bi bi-trash"></i> Hapus Lab
+            </button>
+            
             <div class="form-actions-right">
                 <a href="{{ route('admin.lab.index') }}" class="btn-secondary">Batal</a>
-                <button type="submit" class="btn-primary"><i class="bi bi-check2"></i> Simpan Perubahan</button>
+                <!-- PASTIKAN TOMBOL SIMPAN MERUJUK KE form="form-update" -->
+                <button type="submit" form="form-update" class="btn-primary"><i class="bi bi-check2"></i> Simpan Perubahan</button>
             </div>
         </div>
+    </form>
+    
+    <!-- FORM DELETE DILETAKKAN DI LUAR FORM UTAMA (Disembunyikan) -->
+    <form action="{{ route('admin.lab.destroy', $lab->id_lab) }}" method="POST" id="form-delete" style="display: none;">
+        @csrf @method('DELETE')
     </form>
 </div>
 @endsection

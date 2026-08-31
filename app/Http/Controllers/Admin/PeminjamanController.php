@@ -146,6 +146,15 @@ class PeminjamanController extends Controller
 
         DataPinjam::create($data);
 
+        // ── Tambahan: Kurangi stok lab jika pemohon eksternal ──
+        if ($tipe === 'eksternal') {
+            $lab = DataLab::where('nama_lab', $validated['nama_lab'])->first();
+            if ($lab) {
+                // Pastikan kolom stok tidak minus, atau sesuaikan dengan struktur tabel Anda
+                $lab->decrement('stok'); 
+            }
+        }
+
         $successMsg = $tipe === 'eksternal'
             ? 'Peminjaman eksternal berhasil dibuat. Total biaya: Rp ' . number_format($totalBiaya, 0, ',', '.')
             : 'Peminjaman berhasil dibuat.';
@@ -223,7 +232,17 @@ class PeminjamanController extends Controller
         } elseif ($peminjaman->jenis === 'lab') {
             $lab = DataLab::where('nama_lab', $peminjaman->nama_lab)->first();
             if ($lab) {
-                $lab->increment('stok');
+                // Cek tipe pemohon: 
+                // Jika eksternal, karena saat store dia mengurangi stok lab (-1), 
+                // maka saat checkout stok lab harus dikembalikan (+1).
+                // Jika internal (per kursi), Anda bisa atur sesuai kebutuhan sistem kursi Anda.
+                if ($peminjaman->tipe_pemohon === 'eksternal') {
+                    $lab->increment('stok'); // Mengembalikan jatah lab eksternal
+                } else {
+                    // Jika internal lab (per kursi), sesuaikan apakah kursi mengembalikan stok lab atau tidak
+                    // Contoh jika internal juga mengembalikan slot kursi/stok lab:
+                    $lab->increment('stok'); 
+                }
             }
         }
 
