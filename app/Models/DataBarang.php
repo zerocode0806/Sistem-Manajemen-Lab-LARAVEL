@@ -18,6 +18,7 @@ class DataBarang extends Model
         'id_lab',
         'kode_barang',
         'nama_barang',
+        'gambar',
         'kategori',
         'stok',
         'kondisi',

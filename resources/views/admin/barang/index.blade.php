@@ -23,6 +23,7 @@
         <thead>
             <tr>
                 <th>Kode</th>
+                <th>Gambar</th>
                 <th>Nama Barang</th>
                 <th>Lab</th>
                 <th>Kategori</th>
@@ -36,6 +37,21 @@
             @forelse($barang as $item)
             <tr>
                 <td class="mono" style="color:var(--muted)">{{ $item->kode_barang }}</td>
+                <td>
+                    @if($item->gambar)
+                        <img
+                            src="{{ asset('storage/' . $item->gambar) }}"
+                            alt="{{ $item->nama_barang }}"
+                            style="width:56px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"
+                        >
+                    @else
+                        <div
+                            style="width:56px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--bg);border-radius:6px;color:var(--muted)"
+                        >
+                            <i class="bi bi-image"></i>
+                        </div>
+                    @endif
+                </td>
                 <td style="font-weight:500">{{ $item->nama_barang }}</td>
                 <td>{{ $item->lab->nama_lab ?? '-' }}</td>
                 <td style="color:var(--muted)">{{ $item->kategori ?? '-' }}</td>
@@ -65,7 +81,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="8">
+                <td colspan="9">
                     <div class="empty-state">
                         <div class="empty-icon"><i class="bi bi-box-seam"></i></div>
                         <p>Belum ada data barang. <a href="{{ route('admin.barang.create') }}" style="color:var(--blue)">Tambah sekarang</a></p>

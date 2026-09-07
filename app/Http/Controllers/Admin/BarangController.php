@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DataBarang;
 use App\Models\DataLab;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BarangController extends Controller
 {
@@ -24,17 +25,22 @@ class BarangController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_lab' => ['required', 'exists:data_lab,id_lab'],
-            'kode_barang' => ['required', 'string', 'max:30', 'unique:data_barang'],
-            'nama_barang' => ['required', 'string', 'max:100'],
-            'kategori' => ['nullable', 'string', 'max:50'],
-            'stok' => ['required', 'integer', 'min:0'],
-            'kondisi' => ['required', 'in:baik,rusak,perbaikan'],
-            'status' => ['required', 'in:availabel,tidak availabel'],
-            'keterangan' => ['nullable', 'string'],
-        ]);
+        'id_lab' => ['required', 'exists:data_lab,id_lab'],
+        'kode_barang' => ['required', 'string', 'max:30', 'unique:data_barang'],
+        'nama_barang' => ['required', 'string', 'max:100'],
+        'gambar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+        'kategori' => ['nullable', 'string', 'max:50'],
+        'stok' => ['required', 'integer', 'min:0'],
+        'kondisi' => ['required', 'in:baik,rusak,perbaikan'],
+        'status' => ['required', 'in:availabel,tidak availabel'],
+        'keterangan' => ['nullable', 'string'],
+    ]);
 
-        DataBarang::create($validated);
+    if ($request->hasFile('gambar')) {
+        $validated['gambar'] = $request->file('gambar')->store('barang', 'public');
+    }
+
+    DataBarang::create($validated);
 
         return redirect()->route('admin.barang.index')->with('success', 'Data barang berhasil ditambahkan.');
     }
@@ -58,6 +64,14 @@ class BarangController extends Controller
             'keterangan' => ['nullable', 'string'],
         ]);
 
+        if ($request->hasFile('gambar')) {
+            if ($barang->gambar) {
+                Storage::disk('public')->delete($barang->gambar);
+            }
+
+            $validated['gambar'] = $request->file('gambar')->store('barang', 'public');
+        }
+
         $barang->update($validated);
 
         return redirect()->route('admin.barang.index')->with('success', 'Data barang berhasil diperbarui.');
@@ -65,8 +79,14 @@ class BarangController extends Controller
 
     public function destroy(DataBarang $barang)
     {
+        if ($barang->gambar) {
+            Storage::disk('public')->delete($barang->gambar);
+        }
+
         $barang->delete();
 
-        return redirect()->route('admin.barang.index')->with('success', 'Data barang berhasil dihapus.');
+        return redirect()
+            ->route('admin.barang.index')
+            ->with('success', 'Data barang berhasil dihapus.');
     }
 }

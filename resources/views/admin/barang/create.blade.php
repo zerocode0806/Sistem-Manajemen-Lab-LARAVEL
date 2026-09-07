@@ -13,7 +13,7 @@
 </div>
 
 <div class="form-card">
-    <form action="{{ route('admin.barang.store') }}" method="POST">
+    <form action="{{ route('admin.barang.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         <div class="field-group">
@@ -45,6 +45,49 @@
             <input type="text" id="nama_barang" name="nama_barang" value="{{ old('nama_barang') }}" required placeholder="Nama lengkap barang">
             @error('nama_barang')<span class="field-error">{{ $message }}</span>@enderror
         </div>
+
+        <div class="field-group">
+            <label for="gambar">Gambar Barang</label>
+
+            <input
+                type="file"
+                id="gambar"
+                name="gambar"
+                accept="image/jpeg,image/png,image/webp"
+            >
+
+            <small style="color:var(--muted)">
+                Format JPG, PNG, atau WEBP. Maksimal 4 MB.
+            </small>
+
+            @error('gambar')
+                <span class="field-error">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <img
+            id="gambarPreview"
+            src=""
+            alt="Preview gambar"
+            style="display:none;width:120px;height:90px;object-fit:cover;border-radius:8px;margin-top:10px;border:1px solid var(--border)"
+        >
+
+        @push('scripts')
+        <script>
+        document.getElementById('gambar')?.addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('gambarPreview');
+
+            if (!file) {
+                preview.style.display = 'none';
+                return;
+            }
+
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+        });
+        </script>
+        @endpush
 
         <div class="field-row">
             <div class="field-group">
