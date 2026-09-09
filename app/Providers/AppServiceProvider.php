@@ -17,8 +17,10 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+    public function boot()
     {
-        //
+        if (request()->server('HTTP_X_FORWARDED_PROTO') === 'https' || request()->secure()) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
     }
 }
