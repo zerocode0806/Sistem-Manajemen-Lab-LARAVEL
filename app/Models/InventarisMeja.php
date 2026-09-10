@@ -23,6 +23,8 @@ class InventarisMeja extends Model
         'mouse_kondisi',
         'monitor_kondisi',
         'kursi_kondisi',
+        'keterangan',
+        'spesifikasi_pc',
     ];
 
     public function lab()

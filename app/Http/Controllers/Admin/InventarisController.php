@@ -32,29 +32,56 @@ class InventarisController extends Controller
     {
         $request->validate([
             'type'  => 'required|in:ac,meja,lab',
-            'id'    => 'required',
+            'id'    => 'required|integer',
             'field' => 'required|string',
-            'value' => 'required',
+            'value' => 'nullable',
         ]);
 
         try {
             if ($request->type === 'ac') {
                 $ac = InventarisAc::findOrFail($request->id);
+                if ($request->field !== 'kondisi' || !in_array($request->value, ['normal', 'rusak'], true)) {
+                    abort(422, 'Kondisi AC tidak valid.');
+                }
                 $ac->update(['kondisi' => $request->value]);
             } elseif ($request->type === 'meja') {
                 $meja = InventarisMeja::findOrFail($request->id);
-                $allowedFields = ['cpu_kondisi','keyboard_kondisi','mouse_kondisi','monitor_kondisi','kursi_kondisi'];
-                if (in_array($request->field, $allowedFields)) {
+                $conditionFields = [
+                    'cpu_kondisi'      => ['normal', 'rusak', 'instal_ulang'],
+                    'keyboard_kondisi' => ['normal', 'rusak', 'tidak_ada'],
+                    'mouse_kondisi'    => ['normal', 'rusak', 'tidak_ada'],
+                    'monitor_kondisi'  => ['normal', 'rusak', 'tidak_ada'],
+                    'kursi_kondisi'    => ['normal', 'rusak', 'tidak_ada'],
+                ];
+                $textFields = ['keterangan', 'spesifikasi_pc'];
+
+                if (array_key_exists($request->field, $conditionFields)) {
+                    if (!in_array($request->value, $conditionFields[$request->field], true)) {
+                        abort(422, 'Kondisi perangkat tidak valid.');
+                    }
                     $meja->update([$request->field => $request->value]);
+                } elseif (in_array($request->field, $textFields, true)) {
+                    $value = $request->input('value');
+                    if ($value !== null && mb_strlen((string) $value) > 20000) {
+                        abort(422, 'Isi terlalu panjang.');
+                    }
+                    $meja->update([$request->field => $value]);
+                } else {
+                    abort(422, 'Field inventaris meja tidak valid.');
                 }
             } elseif ($request->type === 'lab') {
                 $lab = DataLab::findOrFail($request->id);
-                if ($request->field === 'jumlah_kursi') {
+                if ($request->field === 'jumlah_kursi' && is_numeric($request->value) && (int) $request->value >= 0) {
                     $lab->update(['jumlah_kursi' => (int) $request->value]);
+                } else {
+                    abort(422, 'Data jumlah kursi tidak valid.');
                 }
             }
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                throw $e;
+            }
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -105,14 +132,15 @@ class InventarisController extends Controller
         $mejaRows = InventarisMeja::where('id_lab', $id_lab)->get();
 
         $periode = PeriodeInventaris::create([
-            'id_lab'        => $id_lab,
-            'bulan'         => $request->bulan,
-            'tahun'         => $request->tahun,
-            'jumlah_kursi'  => $lab->jumlah_kursi,
-            'jumlah_meja'   => $mejaRows->count(),
-            'jumlah_ac'     => $acRows->count(),
-            'dicatat_oleh'  => Auth::guard('admin')->user()->nama ?? 'Admin',
-            'keterangan'    => $request->keterangan,
+            'id_lab'       => $id_lab,
+            'bulan'        => $request->bulan,
+            'tahun'        => $request->tahun,
+            'jumlah_kursi' => $lab->jumlah_kursi,
+            'jumlah_meja'  => $mejaRows->count(),
+            'jumlah_ac'    => $acRows->count(),
+            'tanggal_catat' => now(),
+            'dicatat_oleh' => Auth::guard('admin')->user()->nama ?? 'Admin',
+            'keterangan'   => $request->keterangan,
         ]);
 
         // Snapshot AC
@@ -136,6 +164,8 @@ class InventarisController extends Controller
                 'mouse_kondisi'    => $meja->mouse_kondisi,
                 'monitor_kondisi'  => $meja->monitor_kondisi,
                 'kursi_kondisi'    => $meja->kursi_kondisi,
+                'keterangan'       => $meja->keterangan,
+                'spesifikasi_pc'   => $meja->spesifikasi_pc,
             ]);
         }
 

@@ -14,10 +14,20 @@ h1 { font-size: 18px; margin-bottom: 4px; }
 h2 { font-size: 15px; margin: 20px 0 8px; color: #333; }
 .meta { font-size: 12px; color: #555; margin-bottom: 20px; }
 table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; font-size: 12px; }
+th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; font-size: 12px; vertical-align: top; }
 th { background: #f0f0f0; font-weight: 600; }
+.text-cell {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.45;
+}
+.col-keterangan { width: 20%; }
+.col-spesifikasi { width: 35%; }
 .print-btn { margin-bottom: 20px; padding: 8px 18px; background: #1A1A1A; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
-@media print { .print-btn { display: none; } }
+@media print {
+    .print-btn { display: none; }
+    table tr { break-inside: avoid; page-break-inside: avoid; }
+}
 </style>
 </head>
 <body>
@@ -43,7 +53,7 @@ th { background: #f0f0f0; font-weight: 600; }
     <thead><tr><th>Unit AC</th><th>Kondisi</th></tr></thead>
     <tbody>
         @foreach($periode->riwayatAc as $ac)
-        <tr><td>AC #{{ $ac->nomor_ac }}</td><td>{{ ucfirst($ac->kondisi) }}</td></tr>
+        <tr><td style="width: 20%;">AC #{{ $ac->nomor_ac }}</td><td>{{ ucfirst($ac->kondisi) }}</td></tr>
         @endforeach
     </tbody>
 </table>
@@ -51,20 +61,33 @@ th { background: #f0f0f0; font-weight: 600; }
 <p style="color:#888;margin-bottom:16px">Tidak ada data AC.</p>
 @endif
 
-<h2>Kondisi Meja & Perangkat</h2>
+<h2>Kondisi Meja & Detail Perangkat</h2>
 @if($periode->riwayatMeja->count() > 0)
 <table>
-    <thead><tr><th>Meja</th><th>CPU</th><th>Keyboard</th><th>Mouse</th><th>Monitor</th><th>Kursi</th></tr></thead>
+    <thead>
+        <tr>
+            <th>Meja</th>
+            <th>CPU</th>
+            <th>Keyboard</th>
+            <th>Mouse</th>
+            <th>Monitor</th>
+            <th>Kursi</th>
+            <th class="col-keterangan">Keterangan</th>
+            <th class="col-spesifikasi">Spesifikasi PC</th>
+        </tr>
+    </thead>
     <tbody>
         @foreach($periode->riwayatMeja as $m)
         @php $lm = ['normal'=>'Normal','rusak'=>'Rusak','instal_ulang'=>'Instal Ulang','tidak_ada'=>'Tidak Ada']; @endphp
         <tr>
-            <td>#{{ $m->nomor_meja }}</td>
+            <td style="font-weight: 600">#{{ $m->nomor_meja }}</td>
             <td>{{ $lm[$m->cpu_kondisi] ?? $m->cpu_kondisi }}</td>
             <td>{{ $lm[$m->keyboard_kondisi] ?? $m->keyboard_kondisi }}</td>
             <td>{{ $lm[$m->mouse_kondisi] ?? $m->mouse_kondisi }}</td>
             <td>{{ $lm[$m->monitor_kondisi] ?? $m->monitor_kondisi }}</td>
             <td>{{ $lm[$m->kursi_kondisi] ?? $m->kursi_kondisi }}</td>
+            <td class="text-cell">{{ $m->keterangan ?: '-' }}</td>
+            <td class="text-cell">{{ $m->spesifikasi_pc ?: '-' }}</td>
         </tr>
         @endforeach
     </tbody>
