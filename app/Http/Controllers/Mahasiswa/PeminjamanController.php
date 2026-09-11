@@ -13,7 +13,7 @@ class PeminjamanController extends Controller
 {
     public function create()
     {
-        $labs   = DataLab::where('status', 'availabel')->get();
+        $labs = DataLab::where('status', 'availabel')->get();
         $barang = DataBarang::where('stok', '>', 0)->get();
         return view('mahasiswa.peminjaman.create', compact('labs', 'barang'));
     }
@@ -21,16 +21,30 @@ class PeminjamanController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'jenis'       => ['required', 'in:lab,barang'],
-            'tanggal'     => ['required', 'date'],
-            'jam_mulai'   => ['required', 'date_format:H:i'],
+            'jenis' => ['required', 'in:lab,barang'],
+            'tanggal' => ['required', 'date'],
+            'jam_mulai' => ['required', 'date_format:H:i'],
             'jam_selesai' => ['required', 'date_format:H:i'],
-            'nama_lab'    => ['nullable', 'string', 'max:100'],
-            'id_barang'   => ['nullable', 'exists:data_barang,id_barang'],
+            'nama_lab' => ['nullable', 'string', 'max:100'],
+            'id_barang' => ['nullable', 'exists:data_barang,id_barang'],
             'nama_barang' => ['nullable', 'string', 'max:100'],
-            'jumlah'      => ['nullable', 'integer', 'min:1'],
-            'kursi'       => ['nullable', 'integer', 'min:1'],
+            'jumlah' => ['nullable', 'integer', 'min:1'],
+            'kursi' => ['nullable', 'integer', 'min:1'],
         ]);
+
+        // [TAMBAHAN] Cek limitasi dan kurangi stok barang langsung
+        if ($validated['jenis'] === 'barang' && !empty($validated['id_barang'])) {
+            $barang = DataBarang::find($validated['id_barang']);
+
+            // Tolak jika meminjam lebih dari stok tersedia
+            if (!$barang || $barang->stok < ($validated['jumlah'] ?? 1)) {
+                return back()->withInput()->withErrors([
+                    'jumlah' => 'Stok barang tidak mencukupi. Sisa stok tersedia: ' . ($barang->stok ?? 0)
+                ]);
+            }
+            // Kurangi stok agar tidak bisa dipinjam orang lain
+            $barang->decrement('stok', $validated['jumlah'] ?? 1);
+        }
 
         // Validate kursi not already taken for lab booking
         if ($validated['jenis'] === 'lab' && !empty($validated['kursi'])) {
@@ -41,7 +55,7 @@ class PeminjamanController extends Controller
                 ->where('kursi', $validated['kursi'])
                 ->where(function ($q) use ($validated) {
                     $q->where('jam_mulai', '<', $validated['jam_selesai'])
-                      ->where('jam_selesai', '>', $validated['jam_mulai']);
+                        ->where('jam_selesai', '>', $validated['jam_mulai']);
                 })
                 ->exists();
 
@@ -51,18 +65,18 @@ class PeminjamanController extends Controller
             }
         }
 
-        $validated['nim']    = Auth::guard('mahasiswa')->user()->nim;
+        $validated['nim'] = Auth::guard('mahasiswa')->user()->nim;
         $validated['status'] = 'menunggu';
 
         DataPinjam::create($validated);
 
         return redirect()->route('mahasiswa.peminjaman.riwayat')
-                        ->with('success', 'Peminjaman berhasil diajukan. Silakan ke ICT untuk menyerahkan kartu identitas sebagai jaminan sebelum peminjaman disetujui Aslab.');
+            ->with('success', 'Peminjaman berhasil diajukan. Silakan ke ICT untuk menyerahkan kartu identitas sebagai jaminan sebelum peminjaman disetujui Aslab.');
     }
 
     public function riwayat()
     {
-        $nim        = Auth::guard('mahasiswa')->user()->nim;
+        $nim = Auth::guard('mahasiswa')->user()->nim;
         $peminjaman = DataPinjam::where('nim', $nim)->orderByDesc('id_data')->get();
         return view('mahasiswa.peminjaman.riwayat', compact('peminjaman'));
     }
@@ -78,11 +92,11 @@ class PeminjamanController extends Controller
 
     public function arsip()
     {
-        $nim        = Auth::guard('mahasiswa')->user()->nim;
+        $nim = Auth::guard('mahasiswa')->user()->nim;
         $peminjaman = DataPinjam::where('nim', $nim)
-                         ->whereIn('status', ['selesai', 'ditolak'])
-                         ->orderByDesc('id_data')
-                         ->get();
+            ->whereIn('status', ['selesai', 'ditolak'])
+            ->orderByDesc('id_data')
+            ->get();
         return view('mahasiswa.peminjaman.arsip', compact('peminjaman'));
     }
 
@@ -95,9 +109,9 @@ class PeminjamanController extends Controller
     public function checkSeats(Request $request)
     {
         $request->validate([
-            'nama_lab'    => 'required|string',
-            'tanggal'     => 'required|date',
-            'jam_mulai'   => 'required',
+            'nama_lab' => 'required|string',
+            'tanggal' => 'required|date',
+            'jam_mulai' => 'required',
             'jam_selesai' => 'required',
         ]);
 
@@ -114,7 +128,7 @@ class PeminjamanController extends Controller
             ->whereNotNull('kursi')
             ->where(function ($q) use ($request) {
                 $q->where('jam_mulai', '<', $request->jam_selesai)
-                  ->where('jam_selesai', '>', $request->jam_mulai);
+                    ->where('jam_selesai', '>', $request->jam_mulai);
             })
             ->pluck('kursi')
             ->map(fn($v) => (int) $v)
@@ -123,7 +137,7 @@ class PeminjamanController extends Controller
 
         return response()->json([
             'total_kursi' => (int) $lab->jumlah_kursi,
-            'taken'       => $taken,
+            'taken' => $taken,
         ]);
     }
 }

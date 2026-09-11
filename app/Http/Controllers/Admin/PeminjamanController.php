@@ -30,8 +30,8 @@ class PeminjamanController extends Controller
     // =========================================================
     public function create()
     {
-        $labs      = DataLab::where('status', 'availabel')->get();
-        $barang    = DataBarang::where('stok', '>', 0)->get();
+        $labs = DataLab::where('status', 'availabel')->get();
+        $barang = DataBarang::where('stok', '>', 0)->get();
         $mahasiswa = Mahasiswa::orderBy('nama')->get();
 
         return view('admin.peminjaman.create', compact('labs', 'barang', 'mahasiswa'));
@@ -47,32 +47,43 @@ class PeminjamanController extends Controller
         // ── Validasi bercabang ────────────────────────────────
         $rules = [
             'tipe_pemohon' => ['required', 'in:internal,eksternal'],
-            'tanggal'      => ['required', 'date'],
-            'jam_mulai'    => ['required', 'date_format:H:i'],
-            'jam_selesai'  => ['required', 'date_format:H:i', 'after:jam_mulai'],
+            'tanggal' => ['required', 'date'],
+            'jam_mulai' => ['required', 'date_format:H:i'],
+            'jam_selesai' => ['required', 'date_format:H:i', 'after:jam_mulai'],
         ];
 
         if ($tipe === 'internal') {
-            $rules['nim']        = ['required', 'exists:mahasiswa,nim'];
-            $rules['jenis']      = ['required', 'in:lab,barang'];
-            $rules['nama_lab']   = ['nullable', 'string', 'max:100'];
-            $rules['id_barang']  = ['nullable', 'exists:data_barang,id_barang'];
-            $rules['nama_barang']= ['nullable', 'string', 'max:100'];
-            $rules['jumlah']     = ['nullable', 'integer', 'min:1'];
-            $rules['kursi']      = ['nullable', 'integer', 'min:1'];
+            $rules['nim'] = ['required', 'exists:mahasiswa,nim'];
+            $rules['jenis'] = ['required', 'in:lab,barang'];
+            $rules['nama_lab'] = ['nullable', 'string', 'max:100'];
+            $rules['id_barang'] = ['nullable', 'exists:data_barang,id_barang'];
+            $rules['nama_barang'] = ['nullable', 'string', 'max:100'];
+            $rules['jumlah'] = ['nullable', 'integer', 'min:1'];
+            $rules['kursi'] = ['nullable', 'integer', 'min:1'];
         } else {
-            $rules['nama_instansi']   = ['required', 'string', 'max:255'];
-            $rules['pic_instansi']    = ['required', 'string', 'max:255'];
+            $rules['nama_instansi'] = ['required', 'string', 'max:255'];
+            $rules['pic_instansi'] = ['required', 'string', 'max:255'];
             $rules['kontak_instansi'] = ['required', 'string', 'max:50'];
-            $rules['nama_lab']        = ['required', 'string', 'max:100'];
+            $rules['nama_lab'] = ['required', 'string', 'max:100'];
             $rules['tanggal_selesai'] = ['required', 'date', 'after_or_equal:tanggal'];
             // Tambahkan ke $rules bagian eksternal
             $rules['alamat_instansi'] = ['required', 'string', 'max:255'];
-            $rules['keperluan']       = ['required', 'string'];
-            $rules['no_surat']        = ['nullable', 'string', 'max:100'];
+            $rules['keperluan'] = ['required', 'string'];
+            $rules['no_surat'] = ['nullable', 'string', 'max:100'];
         }
 
         $validated = $request->validate($rules);
+
+        // [TAMBAHAN] Cek & Kurangi stok barang (Hanya untuk internal)
+        if ($tipe === 'internal' && ($validated['jenis'] ?? '') === 'barang' && !empty($validated['id_barang'])) {
+            $barang = DataBarang::find($validated['id_barang']);
+            if (!$barang || $barang->stok < ($validated['jumlah'] ?? 1)) {
+                return back()->withInput()->withErrors([
+                    'jumlah' => 'Stok barang tidak mencukupi. Sisa stok tersedia: ' . ($barang->stok ?? 0)
+                ]);
+            }
+            $barang->decrement('stok', $validated['jumlah'] ?? 1);
+        }
 
         // ── Cek konflik kursi (hanya internal + jenis lab) ───
         if (
@@ -87,7 +98,7 @@ class PeminjamanController extends Controller
                 ->where('kursi', $validated['kursi'])
                 ->where(function ($q) use ($validated) {
                     $q->where('jam_mulai', '<', $validated['jam_selesai'])
-                      ->where('jam_selesai', '>', $validated['jam_mulai']);
+                        ->where('jam_selesai', '>', $validated['jam_mulai']);
                 })
                 ->exists();
 
@@ -103,45 +114,45 @@ class PeminjamanController extends Controller
         $totalBiaya = null;
 
         if ($tipe === 'eksternal') {
-            $mulai      = Carbon::parse($validated['tanggal']);
-            $selesai    = Carbon::parse($validated['tanggal_selesai']);
+            $mulai = Carbon::parse($validated['tanggal']);
+            $selesai = Carbon::parse($validated['tanggal_selesai']);
             $durasiHari = max(1, $mulai->diffInDays($selesai) + 1);
             $totalBiaya = $durasiHari * 75000;
         }
 
         // ── Susun data yang akan disimpan ─────────────────────
         $data = [
-            'tipe_pemohon'     => $tipe,
-            'tanggal'          => $validated['tanggal'],
-            'jam_mulai'        => $validated['jam_mulai'],
-            'jam_selesai'      => $validated['jam_selesai'],
+            'tipe_pemohon' => $tipe,
+            'tanggal' => $validated['tanggal'],
+            'jam_mulai' => $validated['jam_mulai'],
+            'jam_selesai' => $validated['jam_selesai'],
         ];
 
         if ($tipe === 'internal') {
-            $data['nim']         = $validated['nim'];
-            $data['jenis']       = $validated['jenis'];
-            $data['nama_lab']    = $validated['nama_lab']    ?? null;
-            $data['id_barang']   = $validated['id_barang']   ?? null;
+            $data['nim'] = $validated['nim'];
+            $data['jenis'] = $validated['jenis'];
+            $data['nama_lab'] = $validated['nama_lab'] ?? null;
+            $data['id_barang'] = $validated['id_barang'] ?? null;
             $data['nama_barang'] = $validated['nama_barang'] ?? null;
-            $data['jumlah']      = $validated['jumlah']      ?? null;
-            $data['kursi']       = $validated['kursi']       ?? null;
-            $data['status']      = 'menunggu';
+            $data['jumlah'] = $validated['jumlah'] ?? null;
+            $data['kursi'] = $validated['kursi'] ?? null;
+            $data['status'] = 'menunggu';
         } else {
-            $data['nim']              = null;
-            $data['jenis']            = 'lab';
-            $data['nama_lab']         = $validated['nama_lab'];
-            $data['tanggal_selesai']  = $validated['tanggal_selesai'];
-            $data['nama_instansi']    = $validated['nama_instansi'];
-            $data['pic_instansi']     = $validated['pic_instansi'];
-            $data['kontak_instansi']  = $validated['kontak_instansi'];
-            $data['alamat_instansi']  = $validated['alamat_instansi'];  // ← baru
-            $data['keperluan']        = $validated['keperluan'];        // ← baru
-            $data['no_surat']         = $validated['no_surat'] ?? null; // ← baru (nullable)
-            $data['durasi_hari']      = $durasiHari;
-            $data['biaya_per_hari']   = 75000;
-            $data['total_biaya']      = $totalBiaya;
-            $data['status_pembayaran']= 'belum_bayar';
-            $data['status']           = 'disetujui';
+            $data['nim'] = null;
+            $data['jenis'] = 'lab';
+            $data['nama_lab'] = $validated['nama_lab'];
+            $data['tanggal_selesai'] = $validated['tanggal_selesai'];
+            $data['nama_instansi'] = $validated['nama_instansi'];
+            $data['pic_instansi'] = $validated['pic_instansi'];
+            $data['kontak_instansi'] = $validated['kontak_instansi'];
+            $data['alamat_instansi'] = $validated['alamat_instansi'];  // ← baru
+            $data['keperluan'] = $validated['keperluan'];        // ← baru
+            $data['no_surat'] = $validated['no_surat'] ?? null; // ← baru (nullable)
+            $data['durasi_hari'] = $durasiHari;
+            $data['biaya_per_hari'] = 75000;
+            $data['total_biaya'] = $totalBiaya;
+            $data['status_pembayaran'] = 'belum_bayar';
+            $data['status'] = 'disetujui';
         }
 
         DataPinjam::create($data);
@@ -151,7 +162,7 @@ class PeminjamanController extends Controller
             $lab = DataLab::where('nama_lab', $validated['nama_lab'])->first();
             if ($lab) {
                 // Pastikan kolom stok tidak minus, atau sesuaikan dengan struktur tabel Anda
-                $lab->decrement('stok'); 
+                $lab->decrement('stok');
             }
         }
 
@@ -160,7 +171,7 @@ class PeminjamanController extends Controller
             : 'Peminjaman berhasil dibuat.';
 
         return redirect()->route('admin.peminjaman.index')
-                         ->with('success', $successMsg);
+            ->with('success', $successMsg);
     }
 
     // =========================================================
@@ -182,12 +193,8 @@ class PeminjamanController extends Controller
             return back()->with('error', 'Status tidak valid.');
         }
 
-        if ($peminjaman->jenis === 'barang' && $peminjaman->id_barang) {
-            $barang = DataBarang::find($peminjaman->id_barang);
-            if ($barang && $barang->stok >= ($peminjaman->jumlah ?? 1)) {
-                $barang->decrement('stok', $peminjaman->jumlah ?? 1);
-            }
-        } elseif ($peminjaman->jenis === 'lab') {
+        // Logika pengurangan stok barang DIHAPUS. Hanya sisa lab:
+        if ($peminjaman->jenis === 'lab') {
             $lab = DataLab::where('nama_lab', $peminjaman->nama_lab)->first();
             if ($lab && $lab->stok > 0) {
                 $lab->decrement('stok');
@@ -197,7 +204,7 @@ class PeminjamanController extends Controller
         $peminjaman->update(['status' => 'disetujui']);
 
         return redirect()->route('admin.peminjaman.index')
-                         ->with('success', 'Peminjaman berhasil disetujui.');
+            ->with('success', 'Peminjaman berhasil disetujui.');
     }
 
     // =========================================================
@@ -209,10 +216,18 @@ class PeminjamanController extends Controller
             return back()->with('error', 'Status tidak valid.');
         }
 
+        // [TAMBAHAN] Kembalikan stok barang karena peminjaman dibatalkan
+        if ($peminjaman->jenis === 'barang' && $peminjaman->id_barang) {
+            $barang = DataBarang::find($peminjaman->id_barang);
+            if ($barang) {
+                $barang->increment('stok', $peminjaman->jumlah ?? 1);
+            }
+        }
+
         $peminjaman->update(['status' => 'ditolak']);
 
         return redirect()->route('admin.peminjaman.index')
-                         ->with('success', 'Peminjaman berhasil ditolak.');
+            ->with('success', 'Peminjaman berhasil ditolak.');
     }
 
     // =========================================================
@@ -241,7 +256,7 @@ class PeminjamanController extends Controller
                 } else {
                     // Jika internal lab (per kursi), sesuaikan apakah kursi mengembalikan stok lab atau tidak
                     // Contoh jika internal juga mengembalikan slot kursi/stok lab:
-                    $lab->increment('stok'); 
+                    $lab->increment('stok');
                 }
             }
         }
@@ -249,7 +264,7 @@ class PeminjamanController extends Controller
         $peminjaman->update(['status' => 'selesai']);
 
         return redirect()->route('admin.peminjaman.riwayat')
-                         ->with('success', 'Peminjaman selesai dan stok telah dikembalikan.');
+            ->with('success', 'Peminjaman selesai dan stok telah dikembalikan.');
     }
 
     // =========================================================
@@ -296,9 +311,9 @@ class PeminjamanController extends Controller
     public function checkSeats(Request $request)
     {
         $request->validate([
-            'nama_lab'    => 'required|string',
-            'tanggal'     => 'required|date',
-            'jam_mulai'   => 'required',
+            'nama_lab' => 'required|string',
+            'tanggal' => 'required|date',
+            'jam_mulai' => 'required',
             'jam_selesai' => 'required',
         ]);
 
@@ -316,7 +331,7 @@ class PeminjamanController extends Controller
             ->whereNotNull('kursi')
             ->where(function ($q) use ($request) {
                 $q->where('jam_mulai', '<', $request->jam_selesai)
-                  ->where('jam_selesai', '>', $request->jam_mulai);
+                    ->where('jam_selesai', '>', $request->jam_mulai);
             })
             ->pluck('kursi')
             ->map(fn($v) => (int) $v)
@@ -325,7 +340,7 @@ class PeminjamanController extends Controller
 
         return response()->json([
             'total_kursi' => (int) $lab->jumlah_kursi,
-            'taken'       => $taken,
+            'taken' => $taken,
         ]);
     }
 }
