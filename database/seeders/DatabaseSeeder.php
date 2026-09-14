@@ -2,24 +2,24 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
+     *
+     * Order matters: `data_lab` must be seeded before `inventaris_meja`,
+     * since inventaris_meja.id_lab has a foreign key to data_lab.id_lab.
+     * `admin` and `mahasiswa` have no dependencies and can run anytime.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            AdminSeeder::class,
+            DataLabSeeder::class,
+            InventarisMejaSeeder::class,
+            MahasiswaSeeder::class,
         ]);
     }
 }
