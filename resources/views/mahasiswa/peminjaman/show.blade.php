@@ -2,6 +2,11 @@
 @section('title', 'Detail Peminjaman')
 @section('content')
 
+@php
+    $tanggalMulai = \Carbon\Carbon::parse($peminjaman->tanggal);
+    $tanggalSelesai = \Carbon\Carbon::parse($peminjaman->tanggal_selesai ?: $peminjaman->tanggal);
+@endphp
+
 <div class="breadcrumb">
     <a href="{{ route('mahasiswa.peminjaman.riwayat') }}">Riwayat</a>
     <i class="bi bi-chevron-right"></i><span class="current">Detail #{{ $peminjaman->id_data }}</span>
@@ -37,11 +42,14 @@
         <div class="info-item"><span class="info-label">Lab Asal</span><span class="info-value">{{ $peminjaman->nama_lab }}</span></div>
     @else
         <div class="info-item"><span class="info-label">Laboratorium</span><span class="info-value" style="font-weight:500">{{ $peminjaman->nama_lab }}</span></div>
-        <div class="info-item"><span class="info-label">Nomor Kursi</span><span class="info-value mono">{{ $peminjaman->kursi ?? '-' }}</span></div>
+        <div class="info-item"><span class="info-label">Nomor Kursi</span><span class="info-value mono">{{ $peminjaman->seluruh_lab ? 'Seluruh lab' : ($peminjaman->kursi ?? '-') }}</span></div>
     @endif
 
-    <div class="info-item"><span class="info-label">Tanggal</span><span class="info-value mono">{{ \Carbon\Carbon::parse($peminjaman->tanggal)->format('l, d M Y', 'id') }}</span></div>
-    <div class="info-item"><span class="info-label">Jam</span><span class="info-value"><span class="time-range">{{ substr($peminjaman->jam_mulai,0,5) }} – {{ substr($peminjaman->jam_selesai,0,5) }}</span></span></div>
+    <div class="info-item"><span class="info-label">Mulai</span><span class="info-value mono">{{ $tanggalMulai->format('l, d MMMM Y') }} · {{ substr($peminjaman->jam_mulai,0,5) }}</span></div>
+    <div class="info-item"><span class="info-label">Jadwal selesai</span><span class="info-value mono">{{ $tanggalSelesai->format('l, d MMMM Y') }} · {{ substr($peminjaman->jam_selesai,0,5) }}</span></div>
+    @if($peminjaman->tanggal_dikembalikan || $peminjaman->jam_dikembalikan)
+        <div class="info-item"><span class="info-label">Dikembalikan aktual</span><span class="info-value mono">{{ $peminjaman->tanggal_dikembalikan ? \Carbon\Carbon::parse($peminjaman->tanggal_dikembalikan)->format('d M Y') : '-' }} · {{ $peminjaman->jam_dikembalikan ? substr($peminjaman->jam_dikembalikan, 0, 5) : '-' }}</span></div>
+    @endif
     <div class="info-item"><span class="info-label">Status</span><span class="info-value"><span class="badge {{ $bc }}">{{ ucfirst($peminjaman->status) }}</span></span></div>
     <div class="info-item"><span class="info-label">Diajukan</span><span class="info-value mono">{{ \Carbon\Carbon::parse($peminjaman->created_at)->format('d M Y H:i') }}</span></div>
 
@@ -55,10 +63,7 @@
     <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
     <div style="display:flex;align-items:center;gap:8px">
         <i class="bi bi-x-circle" style="color:var(--red)"></i>
-        <span style="font-size:13px;color:var(--red)">
-            Permintaan Anda telah ditolak. Silakan datang ke ICT untuk mengetahui informasi lebih lanjut
-            atau hubungi admin melalui <strong>+62-851-7520-2106</strong>.
-        </span>
+        <span style="font-size:13px;color:var(--red)">Permintaan Anda telah ditolak. Hubungi admin untuk informasi lebih lanjut.</span>
     </div>
     @elseif($peminjaman->status === 'disetujui')
     <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">

@@ -2,134 +2,77 @@
 @section('title', 'Detail Peminjaman')
 @section('content')
 
+@php
+    $kategoriPeminjam = $peminjaman->kategori_peminjam ?? 'internal';
+    $labelPeminjam = [
+        'internal' => 'Mahasiswa Internal',
+        'eksternal_individu' => 'Eksternal Individu',
+        'eksternal_instansi' => 'Eksternal Instansi',
+    ][$kategoriPeminjam] ?? 'Peminjam';
+    $tanggalMulai = \Carbon\Carbon::parse($peminjaman->tanggal);
+    $tanggalSelesai = \Carbon\Carbon::parse($peminjaman->tanggal_selesai ?: $peminjaman->tanggal);
+    $isExternalBooking = in_array($kategoriPeminjam, ['eksternal_individu', 'eksternal_instansi'], true);
+    $jumlahHariPeminjaman = max(1, (int) $tanggalMulai->diffInDays($tanggalSelesai) + 1);
+    $biayaPeminjaman = (int) ($peminjaman->biaya_peminjaman ?? 0);
+    if ($isExternalBooking && $biayaPeminjaman <= 0) {
+        $biayaPeminjaman = $jumlahHariPeminjaman * 75000;
+    }
+    $pembayaranLunas = $peminjaman->status_pembayaran === 'lunas';
+    $statusPembayaranLabel = $pembayaranLunas
+        ? 'Lunas'
+        : ($peminjaman->status_pembayaran === 'belum_lunas' ? 'Belum lunas' : 'Belum diverifikasi');
+    $statusPembayaranBadge = $pembayaranLunas
+        ? 'badge-disetujui'
+        : ($peminjaman->status_pembayaran === 'belum_lunas' ? 'badge-menunggu' : 'badge-default');
+    $checkoutEnabled = !$isExternalBooking || $pembayaranLunas;
+@endphp
+
 <div class="breadcrumb">
     <a href="{{ route('admin.peminjaman.index') }}">Permintaan</a>
-    <i class="bi bi-chevron-right"></i>
-    <span class="current">Detail #{{ $peminjaman->id_data }}</span>
+    <i class="bi bi-chevron-right"></i><span class="current">Detail #{{ $peminjaman->id_data }}</span>
 </div>
 
 <div class="page-header">
     <div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap">
             <h1>Detail Peminjaman</h1>
-
-            {{-- Badge tipe --}}
-            @if($peminjaman->tipe_pemohon === 'eksternal')
-                <span class="badge" style="background:#ede9fe;color:#5b21b6">
-                    <i class="bi bi-building-fill"></i> Eksternal
-                </span>
-            @else
-                <span class="badge" style="background:var(--surface-2);color:var(--muted)">
-                    <i class="bi bi-person-fill"></i> Internal
-                </span>
-            @endif
-
-            {{-- Badge jenis --}}
             @if($peminjaman->jenis === 'barang')
-                <span class="badge badge-barang">
-                    <i class="bi bi-box-seam-fill"></i> Barang / Alat
-                </span>
+                <span class="badge badge-barang"><i class="bi bi-box-seam-fill"></i> Barang / Alat</span>
             @else
-                <span class="badge badge-lab">
-                    <i class="bi bi-building"></i> Ruang Lab
-                </span>
+                <span class="badge badge-lab"><i class="bi bi-building"></i> Ruang Lab</span>
+            @endif
+            @if($kategoriPeminjam !== 'internal')
+                <span class="badge badge-default">{{ $labelPeminjam }}</span>
             @endif
         </div>
-
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            {{-- Badge status --}}
-            @php
-                $bc = [
-                    'menunggu'  => 'badge-menunggu',
-                    'disetujui' => 'badge-disetujui',
-                    'ditolak'   => 'badge-ditolak',
-                    'selesai'   => 'badge-selesai',
-                ][$peminjaman->status] ?? 'badge-default';
-            @endphp
-            <span class="badge {{ $bc }}">{{ ucfirst($peminjaman->status) }}</span>
-
-            {{-- Badge status pembayaran (hanya eksternal) --}}
-            @if($peminjaman->tipe_pemohon === 'eksternal')
-                @if($peminjaman->status_pembayaran === 'lunas')
-                    <span class="badge" style="background:#d1fae5;color:#065f46">
-                        <i class="bi bi-check-circle-fill"></i> Lunas
-                    </span>
-                @else
-                    <span class="badge" style="background:#fef3c7;color:#92400e">
-                        <i class="bi bi-clock-fill"></i> Belum Bayar
-                    </span>
-                @endif
-            @endif
-        </div>
+        @php $bc = ['menunggu'=>'badge-menunggu','disetujui'=>'badge-disetujui','ditolak'=>'badge-ditolak','selesai'=>'badge-selesai'][$peminjaman->status] ?? 'badge-default'; @endphp
+        <span class="badge {{ $bc }}">{{ ucfirst($peminjaman->status) }}</span>
     </div>
-
-    <a href="{{ url()->previous() }}" class="btn-secondary">
-        <i class="bi bi-arrow-left"></i> Kembali
-    </a>
+    <a href="{{ url()->previous() }}" class="btn-secondary"><i class="bi bi-arrow-left"></i> Kembali</a>
 </div>
 
-{{-- ═══════════════════════════════════════════════════════════ --}}
-{{-- GRID CARD ATAS: Pemohon + Detail Peminjaman               --}}
-{{-- ═══════════════════════════════════════════════════════════ --}}
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:20px;margin-bottom:20px">
-
-    {{-- CARD: Data Pemohon --}}
+<div class="detail-grid">
     <div class="card">
         <div class="card-header">
-            <div class="card-header-icon">
-                <i class="{{ $peminjaman->tipe_pemohon === 'eksternal' ? 'bi bi-building' : 'bi bi-person' }}"></i>
-            </div>
-            <h2>{{ $peminjaman->tipe_pemohon === 'eksternal' ? 'Data Instansi' : 'Data Mahasiswa' }}</h2>
+            <div class="card-header-icon"><i class="bi bi-person"></i></div>
+            <h2>{{ $labelPeminjam }}</h2>
         </div>
-
-        @if($peminjaman->tipe_pemohon === 'eksternal')
-            <div class="info-item">
-                <span class="info-label">Nama Instansi</span>
-                <span class="info-value" style="font-weight:500">{{ $peminjaman->nama_instansi }}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">PIC / Penanggung Jawab</span>
-                <span class="info-value">{{ $peminjaman->pic_instansi }}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Kontak PIC</span>
-                <span class="info-value mono">{{ $peminjaman->kontak_instansi }}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Alamat Instansi</span>
-                <span class="info-value">{{ $peminjaman->alamat_instansi ?? '-' }}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Keperluan</span>
-                <span class="info-value" style="white-space:pre-line">{{ $peminjaman->keperluan ?? '-' }}</span>
-            </div>
-            @if($peminjaman->no_surat)
-                <div class="info-item">
-                    <span class="info-label">No. Surat / MOU</span>
-                    <span class="info-value mono">{{ $peminjaman->no_surat }}</span>
-                </div>
-            @endif
+        <div class="info-item"><span class="info-label">{{ $kategoriPeminjam === 'eksternal_instansi' ? 'Penanggung jawab' : 'Nama' }}</span><span class="info-value" style="font-weight:500">{{ $peminjaman->mahasiswa->nama ?? $peminjaman->nama_peminjam ?? '-' }}</span></div>
+        @if($kategoriPeminjam === 'eksternal_instansi')
+            <div class="info-item"><span class="info-label">Instansi / Organisasi</span><span class="info-value">{{ $peminjaman->nama_instansi ?? '-' }}</span></div>
+        @elseif($kategoriPeminjam === 'eksternal_individu')
+            <div class="info-item"><span class="info-label">NIM / Identitas</span><span class="info-value mono">{{ $peminjaman->nim_eksternal ?: '-' }}</span></div>
+            <div class="info-item"><span class="info-label">Program studi / asal</span><span class="info-value">{{ $peminjaman->prodi_peminjam ?? '-' }}</span></div>
         @else
-            <div class="info-item">
-                <span class="info-label">Nama</span>
-                <span class="info-value" style="font-weight:500">{{ $peminjaman->mahasiswa->nama ?? '-' }}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">NIM</span>
-                <span class="info-value mono">{{ $peminjaman->nim }}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">No. Telepon</span>
-                <span class="info-value mono">{{ $peminjaman->mahasiswa->no_telepon ?? '-' }}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Alamat</span>
-                <span class="info-value">{{ $peminjaman->mahasiswa->alamat ?? '-' }}</span>
-            </div>
+            <div class="info-item"><span class="info-label">NIM</span><span class="info-value mono">{{ $peminjaman->nim ?? '-' }}</span></div>
+            <div class="info-item"><span class="info-label">Alamat</span><span class="info-value">{{ $peminjaman->mahasiswa->alamat ?? '-' }}</span></div>
+        @endif
+        <div class="info-item"><span class="info-label">No. Telepon</span><span class="info-value mono">{{ $peminjaman->mahasiswa->no_telepon ?? $peminjaman->kontak_peminjam ?? '-' }}</span></div>
+        @if($peminjaman->tujuan_peminjaman)
+            <div class="info-item"><span class="info-label">Tujuan / kegiatan</span><span class="info-value" style="white-space:pre-wrap;overflow-wrap:anywhere">{{ $peminjaman->tujuan_peminjaman }}</span></div>
         @endif
     </div>
 
-    {{-- CARD: Detail Peminjaman --}}
     <div class="card">
         <div class="card-header">
             <div class="card-header-icon">
@@ -137,195 +80,109 @@
             </div>
             <h2>{{ $peminjaman->jenis === 'barang' ? 'Detail Barang Dipinjam' : 'Detail Peminjaman Lab' }}</h2>
         </div>
-
         @if($peminjaman->jenis === 'barang')
-            <div class="info-item">
-                <span class="info-label">Barang</span>
-                <span class="info-value" style="font-weight:500">{{ $peminjaman->nama_barang ?? '-' }}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Jumlah</span>
-                <span class="info-value mono">{{ $peminjaman->jumlah }} unit</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Lab Asal</span>
-                <span class="info-value">{{ $peminjaman->nama_lab ?? '-' }}</span>
-            </div>
+            <div class="info-item"><span class="info-label">Barang</span><span class="info-value" style="font-weight:500">{{ $peminjaman->nama_barang ?? '-' }}</span></div>
+            <div class="info-item"><span class="info-label">Jumlah</span><span class="info-value mono">{{ $peminjaman->jumlah }} unit</span></div>
+            <div class="info-item"><span class="info-label">Lab Asal</span><span class="info-value">{{ $peminjaman->nama_lab ?? '-' }}</span></div>
         @else
-            <div class="info-item">
-                <span class="info-label">Laboratorium</span>
-                <span class="info-value" style="font-weight:500">{{ $peminjaman->nama_lab ?? '-' }}</span>
-            </div>
-            {{-- Kursi hanya untuk internal --}}
-            @if($peminjaman->tipe_pemohon === 'internal')
-                <div class="info-item">
-                    <span class="info-label">Kursi</span>
-                    <span class="info-value mono">{{ $peminjaman->kursi ?? '-' }}</span>
-                </div>
-            @endif
+            <div class="info-item"><span class="info-label">Laboratorium</span><span class="info-value" style="font-weight:500">{{ $peminjaman->nama_lab ?? '-' }}</span></div>
+            <div class="info-item"><span class="info-label">Area</span><span class="info-value">{{ $peminjaman->seluruh_lab ? 'Seluruh lab' : 'Kursi ' . ($peminjaman->kursi ?? '-') }}</span></div>
         @endif
-
-        <div class="info-item">
-            <span class="info-label">Tanggal Mulai</span>
-            <span class="info-value mono">
-                {{ \Carbon\Carbon::parse($peminjaman->tanggal)->format('d M Y') }}
-            </span>
-        </div>
-
-        {{-- Tanggal selesai + durasi hanya untuk eksternal --}}
-        @if($peminjaman->tipe_pemohon === 'eksternal')
-            <div class="info-item">
-                <span class="info-label">Tanggal Selesai</span>
-                <span class="info-value mono">
-                    {{ \Carbon\Carbon::parse($peminjaman->tanggal_selesai)->format('d M Y') }}
-                </span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Durasi</span>
-                <span class="info-value mono">{{ $peminjaman->durasi_hari }} hari</span>
-            </div>
+        <div class="info-item"><span class="info-label">Mulai</span><span class="info-value mono">{{ $tanggalMulai->format('d M Y') }} · {{ substr($peminjaman->jam_mulai,0,5) }}</span></div>
+        <div class="info-item"><span class="info-label">Jadwal selesai</span><span class="info-value mono">{{ $tanggalSelesai->format('d M Y') }} · {{ substr($peminjaman->jam_selesai,0,5) }}</span></div>
+        @if($peminjaman->tanggal_dikembalikan || $peminjaman->jam_dikembalikan)
+            <div class="info-item"><span class="info-label">Dikembalikan aktual</span><span class="info-value mono">{{ $peminjaman->tanggal_dikembalikan ? \Carbon\Carbon::parse($peminjaman->tanggal_dikembalikan)->format('d M Y') : '-' }} · {{ $peminjaman->jam_dikembalikan ? substr($peminjaman->jam_dikembalikan, 0, 5) : '-' }}</span></div>
         @endif
-
-        <div class="info-item">
-            <span class="info-label">Jam</span>
-            <span class="info-value">
-                <span class="time-range">
-                    {{ substr($peminjaman->jam_mulai, 0, 5) }} – {{ substr($peminjaman->jam_selesai, 0, 5) }}
-                </span>
-            </span>
-        </div>
     </div>
 </div>
 
-{{-- ═══════════════════════════════════════════════════════════ --}}
-{{-- CARD BIAYA — hanya eksternal                              --}}
-{{-- ═══════════════════════════════════════════════════════════ --}}
-@if($peminjaman->tipe_pemohon === 'eksternal')
-<div class="card" style="margin-bottom:20px">
+@if($isExternalBooking)
+<div class="card">
     <div class="card-header">
         <div class="card-header-icon"><i class="bi bi-cash-coin"></i></div>
-        <h2>Informasi Biaya</h2>
+        <h2>Pembayaran</h2>
     </div>
+    <div class="info-item"><span class="info-label">Tarif</span><span class="info-value mono">Rp75.000 / hari</span></div>
+    <div class="info-item"><span class="info-label">Lama peminjaman</span><span class="info-value">{{ $jumlahHariPeminjaman }} hari</span></div>
+    <div class="info-item"><span class="info-label">Total tagihan</span><span class="info-value mono" style="font-weight:600">Rp{{ number_format($biayaPeminjaman, 0, ',', '.') }}</span></div>
     <div class="info-item">
-        <span class="info-label">Biaya per Hari</span>
-        <span class="info-value mono">Rp {{ number_format($peminjaman->biaya_per_hari, 0, ',', '.') }}</span>
-    </div>
-    <div class="info-item">
-        <span class="info-label">Durasi</span>
-        <span class="info-value mono">{{ $peminjaman->durasi_hari }} hari</span>
-    </div>
-    <div class="info-item">
-        <span class="info-label">Total Biaya</span>
-        <span class="info-value" style="font-size:18px;font-weight:600;color:var(--primary)">
-            Rp {{ number_format($peminjaman->total_biaya, 0, ',', '.') }}
-        </span>
-    </div>
-    <div class="info-item">
-        <span class="info-label">Status Pembayaran</span>
+        <span class="info-label">Status pembayaran</span>
         <span class="info-value">
-            @if($peminjaman->status_pembayaran === 'lunas')
-                <span style="display:inline-flex;align-items:center;gap:6px;color:#065f46;font-weight:500">
-                    <i class="bi bi-check-circle-fill"></i> Lunas
-                </span>
-            @else
-                <span style="display:inline-flex;align-items:center;gap:6px;color:#92400e;font-weight:500">
-                    <i class="bi bi-clock-fill"></i> Belum Bayar
-                </span>
-            @endif
+            <span class="badge {{ $statusPembayaranBadge }}">
+                {{ $statusPembayaranLabel }}
+            </span>
         </span>
     </div>
+    @if($peminjaman->pembayaran_dikonfirmasi_pada)
+        <div class="info-item">
+            <span class="info-label">Dikonfirmasi pada</span>
+            <span class="info-value mono">{{ \Carbon\Carbon::parse($peminjaman->pembayaran_dikonfirmasi_pada)->format('d M Y · H:i') }}</span>
+        </div>
+    @endif
+    @if($peminjaman->status === 'disetujui' && !$pembayaranLunas)
+        <form action="{{ route('admin.peminjaman.confirmPayment', $peminjaman->id_data) }}" method="POST" style="margin-top:14px">
+            @csrf
+            <button type="submit" class="btn-success" onclick="return confirm('Konfirmasi bahwa pembayaran sebesar Rp{{ number_format($biayaPeminjaman, 0, ',', '.') }} telah lunas?')">
+                <i class="bi bi-check2-circle"></i> Konfirmasi Pelunasan
+            </button>
+        </form>
+    @endif
 </div>
 @endif
 
-{{-- ═══════════════════════════════════════════════════════════ --}}
-{{-- CARD TINDAKAN                                             --}}
-{{-- ═══════════════════════════════════════════════════════════ --}}
 @if($peminjaman->status === 'menunggu')
 <div class="card">
-    <div class="card-header">
-        <div class="card-header-icon"><i class="bi bi-sliders"></i></div>
-        <h2>Tindakan</h2>
-    </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <form action="{{ route('admin.peminjaman.approve', $peminjaman->id_data) }}"
-              method="POST" style="margin:0">
+    <div class="card-header"><div class="card-header-icon"><i class="bi bi-sliders"></i></div><h2>Tindakan</h2></div>
+    <div style="display:flex;gap:10px">
+        <form action="{{ route('admin.peminjaman.approve', $peminjaman->id_data) }}" method="POST" style="margin:0">
             @csrf
-            <button type="submit" class="btn-success"
-                    onclick="return confirm('Setujui peminjaman ini?')">
+            <button type="submit" class="btn-success" onclick="return confirm('Setujui peminjaman ini?')">
                 <i class="bi bi-check2-circle"></i> Setujui Peminjaman
             </button>
         </form>
-        <form action="{{ route('admin.peminjaman.reject', $peminjaman->id_data) }}"
-              method="POST" style="margin:0">
+        <form action="{{ route('admin.peminjaman.reject', $peminjaman->id_data) }}" method="POST" style="margin:0">
             @csrf
-            <button type="submit" class="btn-danger"
-                    onclick="return confirm('Tolak peminjaman ini?')">
+            <button type="submit" class="btn-danger" onclick="return confirm('Tolak peminjaman ini?')">
                 <i class="bi bi-x-circle"></i> Tolak Peminjaman
             </button>
         </form>
     </div>
 </div>
-
 @elseif($peminjaman->status === 'disetujui')
 <div class="card">
-    <div class="card-header">
-        <div class="card-header-icon"><i class="bi bi-check2-circle"></i></div>
-        <h2>Tindakan</h2>
-    </div>
-
-    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start">
-
-        {{-- Konfirmasi pembayaran — hanya eksternal belum bayar --}}
-        @if($peminjaman->tipe_pemohon === 'eksternal' && $peminjaman->status_pembayaran === 'belum_bayar')
-            <form action="{{ route('admin.peminjaman.updatePembayaran', $peminjaman->id_data) }}"
-                  method="POST" style="margin:0">
-                @csrf
-                @method('PATCH')
-                <button type="submit" class="btn-primary"
-                        onclick="return confirm('Konfirmasi pembayaran sudah lunas?')">
-                    <i class="bi bi-cash-coin"></i> Konfirmasi Pembayaran Lunas
-                </button>
-            </form>
-        @endif
-
-        {{-- Checkout: internal langsung bisa, eksternal harus lunas dulu --}}
-        @if($peminjaman->tipe_pemohon === 'internal' || $peminjaman->status_pembayaran === 'lunas')
-            <form action="{{ route('admin.peminjaman.checkout', $peminjaman->id_data) }}"
-                  method="POST" style="margin:0">
-                @csrf
-                <button type="submit" class="btn-blue"
-                        onclick="return confirm('Tandai selesai & kembalikan stok?')">
-                    <i class="bi bi-check2-circle"></i> Tandai Selesai & Kembalikan Stok
-                </button>
-            </form>
-        @else
-            <button class="btn-blue" disabled
-                    title="Selesaikan pembayaran terlebih dahulu"
-                    style="opacity:0.5;cursor:not-allowed">
-                <i class="bi bi-lock"></i> Tandai Selesai (Belum Lunas)
-            </button>
-        @endif
-
-    </div>
-
-    {{-- Hint eksternal belum bayar --}}
-    @if($peminjaman->tipe_pemohon === 'eksternal' && $peminjaman->status_pembayaran === 'belum_bayar')
-        <p style="font-size:12.5px;color:var(--muted);margin-top:12px">
-            <i class="bi bi-info-circle"></i>
-            Peminjaman eksternal harus dikonfirmasi pembayarannya sebelum bisa ditandai selesai.
-        </p>
+    <div class="card-header"><div class="card-header-icon"><i class="bi bi-check2-circle"></i></div><h2>Tandai Selesai</h2></div>
+    @if(!$checkoutEnabled)
+        <div class="flash flash-warn">
+            <i class="bi bi-lock-fill"></i>
+            <span>Checkout terkunci. Admin harus mengonfirmasi pelunasan pembayaran terlebih dahulu.</span>
+        </div>
+    @else
+        <p style="font-size:13.5px;color:var(--muted);margin-bottom:14px">Masukkan tanggal dan jam pengembalian aktual sebelum menandai peminjaman selesai.</p>
     @endif
+    <form action="{{ route('admin.peminjaman.checkout', $peminjaman->id_data) }}" method="POST" style="margin:0">
+        @csrf
+        <div class="field-row" style="max-width:600px">
+            <div class="field-group">
+                <label for="tanggal_dikembalikan">Tanggal pengembalian aktual</label>
+                <input type="date" id="tanggal_dikembalikan" name="tanggal_dikembalikan" value="{{ old('tanggal_dikembalikan', now()->format('Y-m-d')) }}" required @if(!$checkoutEnabled) disabled @endif>
+                @error('tanggal_dikembalikan')<span class="field-error">{{ $message }}</span>@enderror
+            </div>
+            <div class="field-group">
+                <label for="jam_dikembalikan">Jam pengembalian aktual</label>
+                <input type="time" id="jam_dikembalikan" name="jam_dikembalikan" value="{{ old('jam_dikembalikan', now()->format('H:i')) }}" required @if(!$checkoutEnabled) disabled @endif>
+                @error('jam_dikembalikan')<span class="field-error">{{ $message }}</span>@enderror
+            </div>
+        </div>
+        <button type="submit" class="btn-blue" @if(!$checkoutEnabled) disabled aria-disabled="true" style="opacity:.55;cursor:not-allowed" title="Konfirmasi pelunasan pembayaran terlebih dahulu" @else onclick="return confirm('Simpan waktu pengembalian dan tandai peminjaman selesai?')" @endif>
+            <i class="bi bi-check2-circle"></i> Simpan Pengembalian & Tandai Selesai
+        </button>
+    </form>
 </div>
-
 @else
 <div class="card" style="background:var(--bg)">
     <div style="display:flex;align-items:center;gap:10px;color:var(--muted)">
         <i class="bi bi-lock-fill"></i>
-        <span style="font-size:13.5px">
-            Peminjaman ini berstatus
-            <strong style="color:var(--text)">{{ ucfirst($peminjaman->status) }}</strong>
-            dan tidak dapat diubah.
-        </span>
+        <span style="font-size:13.5px">Peminjaman ini berstatus <strong style="color:var(--text)">{{ ucfirst($peminjaman->status) }}</strong> dan tidak dapat diubah.</span>
     </div>
 </div>
 @endif

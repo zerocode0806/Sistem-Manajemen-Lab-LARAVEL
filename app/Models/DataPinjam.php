@@ -15,33 +15,32 @@ class DataPinjam extends Model
     protected $keyType = 'int';
     public $timestamps = false;
 
-    // app/Models/DataPinjam.php
-
     protected $fillable = [
-        'tipe_pemohon',
         'nim',
         'jenis',
+        'kategori_peminjam',
+        'nama_peminjam',
+        'nim_eksternal',
+        'prodi_peminjam',
+        'kontak_peminjam',
+        'nama_instansi',
+        'tujuan_peminjaman',
         'tanggal',
         'tanggal_selesai',
+        'tanggal_dikembalikan',
         'jam_mulai',
         'jam_selesai',
+        'jam_dikembalikan',
         'nama_lab',
         'id_barang',
         'nama_barang',
         'jumlah',
         'kursi',
+        'seluruh_lab',
         'status',
-        // kolom baru eksternal
-        'nama_instansi',
-        'pic_instansi',
-        'kontak_instansi',
-        'durasi_hari',
-        'biaya_per_hari',
-        'total_biaya',
+        'biaya_peminjaman',
         'status_pembayaran',
-        'alamat_instansi',
-        'keperluan',
-        'no_surat',
+        'pembayaran_dikonfirmasi_pada',
     ];
 
     public function mahasiswa()

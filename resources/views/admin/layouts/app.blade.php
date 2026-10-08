@@ -119,6 +119,12 @@ body {
 .nav-link.active { background: var(--accent); color: #fff; }
 .nav-link.danger { color: var(--red); }
 .nav-link.danger:hover { background: var(--red-soft); color: var(--red); }
+.nav-link.nav-group-toggle { justify-content: flex-start; }
+.nav-link.nav-group-toggle.is-open { background: var(--bg); color: var(--text); }
+.nav-group-chevron { margin-left: auto; width: auto !important; font-size: 11px !important; transition: transform .15s ease; }
+.nav-group-toggle[aria-expanded="true"] .nav-group-chevron { transform: rotate(180deg); }
+.nav-submenu { padding: 2px 0 6px 28px; }
+.nav-submenu .nav-link { font-size: 12.5px; padding: 7px 10px; }
 
 .sidebar-spacer { flex: 1; }
 
@@ -399,7 +405,7 @@ body {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    overflow: auto;
+    overflow: hidden;
 }
 
 table {
@@ -587,6 +593,7 @@ tbody tr:hover { background: var(--bg); }
 
 .field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
 .field-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
 .field-group label { font-size: 12.5px; font-weight: 600; color: var(--text); }
 
 .field-group input,
@@ -717,6 +724,7 @@ tbody tr:hover { background: var(--bg); }
     .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
     .page-header { flex-direction: column; align-items: flex-start; }
     .field-row { grid-template-columns: 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
     .form-card { padding: 20px; }
     .form-actions { flex-direction: column; align-items: stretch; }
     .form-actions-right { flex-direction: column; }
@@ -776,6 +784,31 @@ tbody tr:hover { background: var(--bg); }
             <a class="nav-link @if(request()->routeIs('admin.peminjaman.index')) active @endif" href="{{ route('admin.peminjaman.index') }}">
                 <i class="bi bi-clock-history"></i> Permintaan
             </a>
+        </li>
+        <li class="nav-item">
+            @php
+                $externalMenuOpen = request()->routeIs('admin.peminjaman.externalIndividual.*')
+                    || request()->routeIs('admin.peminjaman.externalInstitution.*');
+            @endphp
+            <button
+                type="button"
+                class="nav-link nav-group-toggle @if($externalMenuOpen) is-open @endif"
+                aria-expanded="{{ $externalMenuOpen ? 'true' : 'false' }}"
+                aria-controls="external-booking-submenu"
+                data-nav-toggle
+            >
+                <i class="bi bi-person-lines-fill"></i>
+                <span>Peminjaman Eksternal</span>
+                <i class="bi bi-chevron-down nav-group-chevron" aria-hidden="true"></i>
+            </button>
+            <div class="nav-submenu" id="external-booking-submenu" @if(!$externalMenuOpen) hidden @endif>
+                <a class="nav-link @if(request()->routeIs('admin.peminjaman.externalIndividual.*')) active @endif" href="{{ route('admin.peminjaman.externalIndividual.create') }}">
+                    <i class="bi bi-person-plus"></i> Individu
+                </a>
+                <a class="nav-link @if(request()->routeIs('admin.peminjaman.externalInstitution.*')) active @endif" href="{{ route('admin.peminjaman.externalInstitution.create') }}">
+                    <i class="bi bi-building-add"></i> Instansi
+                </a>
+            </div>
         </li>
         <li class="nav-item">
             <a class="nav-link @if(request()->routeIs('admin.peminjaman.riwayat')) active @endif" href="{{ route('admin.peminjaman.riwayat') }}">
@@ -859,6 +892,15 @@ if (toggleBtn) {
 overlay.addEventListener('click', () => {
     sidebar.classList.remove('show');
     overlay.classList.remove('show');
+});
+document.querySelectorAll('[data-nav-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+        const expanded = button.getAttribute('aria-expanded') === 'true';
+        const submenu = document.getElementById(button.getAttribute('aria-controls'));
+        button.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+        button.classList.toggle('is-open', !expanded);
+        if (submenu) submenu.hidden = expanded;
+    });
 });
 </script>
 @stack('scripts')

@@ -9,7 +9,7 @@
 <div class="toolbar">
     <div class="search-wrap">
         <i class="bi bi-search"></i>
-        <input type="text" class="search-input" id="searchInput" placeholder="Cari NIM, nama instansi, atau lab…">
+        <input type="text" class="search-input" id="searchInput" placeholder="Cari NIM, nama, atau lab…">
     </div>
     <span class="row-count" id="rowCount"></span>
 </div>
@@ -17,185 +17,69 @@
 <div class="table-card">
     <table>
         <thead>
-            <tr>
-                <th>Pemohon</th>
-                <th>Tipe</th>
-                <th>Jenis</th>
-                <th>Lab / Barang</th>
-                <th>Tanggal</th>
-                <th>Jam</th>
-                <th>Biaya</th>
-                <th>Status</th>
-                <th>Aksi</th>
-            </tr>
+            <tr><th>NIM</th><th>Nama</th><th>Jenis</th><th>Lab / Barang</th><th>Tanggal</th><th>Jam</th><th>Status</th><th>Pembayaran</th><th>Aksi</th></tr>
         </thead>
         <tbody id="tableBody">
             @forelse($peminjaman as $p)
             <tr>
-                {{-- Pemohon: NIM+nama untuk internal, instansi+PIC untuk eksternal --}}
-                <td>
-                    @if($p->tipe_pemohon === 'eksternal')
-                        <span style="font-weight:500">{{ $p->nama_instansi }}</span>
-                        <br><span style="font-size:12px;color:var(--muted)">PIC: {{ $p->pic_instansi }}</span>
-                    @else
-                        <span style="font-weight:500">{{ $p->mahasiswa->nama ?? '-' }}</span>
-                        <br><span class="mono" style="font-size:12px;color:var(--muted)">{{ $p->nim }}</span>
-                    @endif
-                </td>
-
-                {{-- Tipe --}}
-                <td>
-                    @if($p->tipe_pemohon === 'eksternal')
-                        <span class="badge" style="background:#ede9fe;color:#5b21b6">
-                            <i class="bi bi-building-fill"></i> Eksternal
-                        </span>
-                    @else
-                        <span class="badge" style="background:var(--surface-2);color:var(--muted)">
-                            <i class="bi bi-person-fill"></i> Internal
-                        </span>
-                    @endif
-                </td>
-
-                {{-- Jenis --}}
+                <td class="mono">{{ $p->nim ?? $p->nim_eksternal ?? '-' }}</td>
+                <td style="font-weight:500">{{ $p->mahasiswa->nama ?? $p->nama_peminjam ?? '-' }}</td>
                 <td>
                     @if($p->jenis === 'barang')
                         <span class="badge badge-barang">Barang</span>
                     @else
                         <span class="badge badge-lab">Lab</span>
                     @endif
-                </td>
-
-                {{-- Lab / Barang --}}
-                <td>{{ $p->jenis === 'barang' ? $p->nama_barang : $p->nama_lab }}</td>
-
-                {{-- Tanggal: range untuk eksternal, single untuk internal --}}
-                <td class="mono" style="font-size:12.5px">
-                    {{ \Carbon\Carbon::parse($p->tanggal)->format('d M Y') }}
-                    @if($p->tipe_pemohon === 'eksternal' && $p->tanggal_selesai)
-                        <br><span style="color:var(--muted)">s/d {{ \Carbon\Carbon::parse($p->tanggal_selesai)->format('d M Y') }}</span>
-                        <br><span style="color:var(--muted)">{{ $p->durasi_hari }} hari</span>
+                    @if(($p->kategori_peminjam ?? 'internal') === 'eksternal_individu')
+                        <span class="badge badge-default">Eksternal Individu</span>
+                    @elseif(($p->kategori_peminjam ?? 'internal') === 'eksternal_instansi')
+                        <span class="badge badge-default">Eksternal Instansi</span>
                     @endif
                 </td>
-
-                {{-- Jam --}}
+                <td>{{ $p->jenis === 'barang' ? $p->nama_barang : $p->nama_lab }}@if($p->seluruh_lab)<small style="display:block;color:var(--muted)">Seluruh lab</small>@endif</td>
+                <td class="mono">{{ \Carbon\Carbon::parse($p->tanggal)->format('d M Y') }}@if($p->tanggal_selesai && $p->tanggal_selesai !== $p->tanggal) – {{ \Carbon\Carbon::parse($p->tanggal_selesai)->format('d M Y') }}@endif</td>
+                <td><span class="time-range">{{ substr($p->jam_mulai,0,5) }} – {{ substr($p->jam_selesai,0,5) }}</span></td>
                 <td>
-                    <span class="time-range">
-                        {{ substr($p->jam_mulai, 0, 5) }} – {{ substr($p->jam_selesai, 0, 5) }}
-                    </span>
-                </td>
-
-                {{-- Biaya: hanya eksternal --}}
-                <td>
-                    @if($p->tipe_pemohon === 'eksternal')
-                        <span style="font-weight:500;font-size:13px">
-                            Rp {{ number_format($p->total_biaya, 0, ',', '.') }}
-                        </span>
-                        <br>
-                        @if($p->status_pembayaran === 'lunas')
-                            <span style="font-size:11px;color:#065f46;display:inline-flex;align-items:center;gap:3px">
-                                <i class="bi bi-check-circle-fill"></i> Lunas
-                            </span>
-                        @else
-                            <span style="font-size:11px;color:#92400e;display:inline-flex;align-items:center;gap:3px">
-                                <i class="bi bi-clock-fill"></i> Belum Bayar
-                            </span>
-                        @endif
-                    @else
-                        <span style="color:var(--muted);font-size:12px">—</span>
-                    @endif
-                </td>
-
-                {{-- Status --}}
-                <td>
-                    @php
-                        $bc = [
-                            'disetujui' => 'badge-disetujui',
-                            'selesai'   => 'badge-selesai',
-                        ][$p->status] ?? 'badge-default';
-                    @endphp
+                    @php $bc = ['disetujui'=>'badge-disetujui','selesai'=>'badge-selesai'][$p->status] ?? 'badge-default'; @endphp
                     <span class="badge {{ $bc }}">{{ ucfirst($p->status) }}</span>
                 </td>
-
-                {{-- Aksi --}}
+                <td>
+                    @if(in_array($p->kategori_peminjam ?? 'internal', ['eksternal_individu', 'eksternal_instansi'], true))
+                        @php
+                            $hariTagihan = max(1, (int) \Carbon\Carbon::parse($p->tanggal)->diffInDays(\Carbon\Carbon::parse($p->tanggal_selesai ?: $p->tanggal)) + 1);
+                            $jumlahTagihan = (int) ($p->biaya_peminjaman ?? 0);
+                            if ($jumlahTagihan <= 0) $jumlahTagihan = $hariTagihan * 75000;
+                            $sudahLunas = $p->status_pembayaran === 'lunas';
+                            $statusBayar = $sudahLunas
+                                ? 'Lunas'
+                                : ($p->status_pembayaran === 'belum_lunas' ? 'Belum lunas' : 'Belum diverifikasi');
+                            $badgeBayar = $sudahLunas
+                                ? 'badge-disetujui'
+                                : ($p->status_pembayaran === 'belum_lunas' ? 'badge-menunggu' : 'badge-default');
+                        @endphp
+                        <span class="mono">Rp{{ number_format($jumlahTagihan, 0, ',', '.') }}</span>
+                        <span class="badge {{ $badgeBayar }}" style="display:block;width:max-content;margin-top:4px">
+                            {{ $statusBayar }}
+                        </span>
+                    @else
+                        <span style="color:var(--muted)">—</span>
+                    @endif
+                </td>
                 <td>
                     <div class="action-buttons">
-
-                        {{-- Tombol detail --}}
-                        <a href="{{ route('admin.peminjaman.show', $p->id_data) }}"
-                           class="btn-action btn-view" title="Detail">
-                            <i class="bi bi-eye"></i>
-                        </a>
-
+                        <a href="{{ route('admin.peminjaman.show', $p->id_data) }}" class="btn-action btn-view" title="Detail"><i class="bi bi-eye"></i></a>
                         @if($p->status === 'disetujui')
-
-                            @if($p->tipe_pemohon === 'eksternal')
-
-                                {{-- Konfirmasi lunas dulu jika belum bayar --}}
-                                @if($p->status_pembayaran === 'belum_bayar')
-                                    <form action="{{ route('admin.peminjaman.updatePembayaran', $p->id_data) }}"
-                                          method="POST" style="margin:0">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit"
-                                                class="btn-action btn-checkout"
-                                                title="Konfirmasi Pembayaran"
-                                                onclick="return confirm('Konfirmasi pembayaran sudah lunas?')"
-                                                style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:4px 10px">
-                                            <i class="bi bi-cash-coin"></i> Lunas
-                                        </button>
-                                    </form>
-
-                                    {{-- Checkout dikunci --}}
-                                    <button class="btn-action btn-checkout"
-                                            disabled
-                                            title="Selesaikan pembayaran terlebih dahulu"
-                                            style="opacity:0.4;cursor:not-allowed">
-                                        <i class="bi bi-lock"></i>
-                                    </button>
-
-                                @else
-                                    {{-- Sudah lunas: bisa checkout --}}
-                                    <form action="{{ route('admin.peminjaman.checkout', $p->id_data) }}"
-                                          method="POST" style="margin:0">
-                                        @csrf
-                                        <button type="submit"
-                                                class="btn-action btn-checkout"
-                                                title="Tandai Selesai"
-                                                onclick="return confirm('Tandai selesai & kembalikan stok?')"
-                                                style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:4px 10px">
-                                            <i class="bi bi-check2-circle"></i> Selesai
-                                        </button>
-                                    </form>
-                                @endif
-
+                            @if(in_array($p->kategori_peminjam ?? 'internal', ['eksternal_individu', 'eksternal_instansi'], true) && $p->status_pembayaran !== 'lunas')
+                                <a href="{{ route('admin.peminjaman.show', $p->id_data) }}" class="btn-action btn-checkout" title="Konfirmasi pembayaran sebelum checkout"><i class="bi bi-cash-coin"></i> Konfirmasi</a>
                             @else
-                                {{-- Internal: langsung bisa checkout --}}
-                                <form action="{{ route('admin.peminjaman.checkout', $p->id_data) }}"
-                                      method="POST" style="margin:0">
-                                    @csrf
-                                    <button type="submit"
-                                            class="btn-action btn-checkout"
-                                            title="Tandai Selesai"
-                                            onclick="return confirm('Tandai selesai?')"
-                                            style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:4px 10px">
-                                        <i class="bi bi-check2-circle"></i> Selesai
-                                    </button>
-                                </form>
+                                <a href="{{ route('admin.peminjaman.show', $p->id_data) }}" class="btn-action btn-checkout" title="Isi pengembalian aktual"><i class="bi bi-check2-circle"></i> Selesai</a>
                             @endif
-
                         @endif
                     </div>
                 </td>
             </tr>
             @empty
-            <tr>
-                <td colspan="9">
-                    <div class="empty-state">
-                        <div class="empty-icon"><i class="bi bi-check-circle"></i></div>
-                        <p>Tidak ada peminjaman yang sedang berlangsung.</p>
-                    </div>
-                </td>
-            </tr>
+            <tr><td colspan="9"><div class="empty-state"><div class="empty-icon"><i class="bi bi-check-circle"></i></div><p>Tidak ada peminjaman yang sedang berlangsung.</p></div></td></tr>
             @endforelse
         </tbody>
     </table>
@@ -203,22 +87,13 @@
 
 @push('scripts')
 <script>
-const rows = Array.from(document.querySelectorAll('#tableBody tr'))
-    .filter(r => r.querySelectorAll('td').length > 1);
-
+const rows = Array.from(document.querySelectorAll('#tableBody tr')).filter(r => r.querySelectorAll('td').length > 1);
 rows.forEach(r => r.setAttribute('data-search', r.textContent.toLowerCase()));
-
 const rc = document.getElementById('rowCount');
 rc.textContent = rows.length + ' data';
-
-document.getElementById('searchInput').addEventListener('input', function () {
-    const q = this.value.toLowerCase();
-    let v = 0;
-    rows.forEach(r => {
-        const show = r.getAttribute('data-search').includes(q);
-        r.style.display = show ? '' : 'none';
-        if (show) v++;
-    });
+document.getElementById('searchInput').addEventListener('input', function() {
+    const q = this.value.toLowerCase(); let v = 0;
+    rows.forEach(r => { const s = r.getAttribute('data-search').includes(q); r.style.display = s ? '' : 'none'; if(s) v++; });
     rc.textContent = v + ' data';
 });
 </script>

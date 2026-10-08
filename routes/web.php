@@ -12,7 +12,6 @@ use App\Http\Controllers\Admin\InventarisController      as AdminInventarisContr
 use App\Http\Controllers\Admin\AkunController            as AdminAkunController;
 use App\Http\Controllers\Mahasiswa\DashboardController   as MahasiswaDashboardController;
 use App\Http\Controllers\Mahasiswa\PeminjamanController  as MahasiswaPeminjamanController;
-use App\Http\Controllers\Mahasiswa\ProfileController      as MahasiswaProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,51 +62,21 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::resource('mahasiswa', AdminMahasiswaController::class);
 
     // Peminjaman – seat check must be BEFORE the wildcard {peminjaman} route
-    Route::get('peminjaman/check-seats',
-        [AdminPeminjamanController::class, 'checkSeats']
-    )->name('peminjaman.checkSeats');
-
-    Route::get('peminjaman',
-        [AdminPeminjamanController::class, 'index']
-    )->name('peminjaman.index');
-
-    Route::get('peminjaman/create',
-        [AdminPeminjamanController::class, 'create']
-    )->name('peminjaman.create');
-
-    Route::post('peminjaman',
-        [AdminPeminjamanController::class, 'store']
-    )->name('peminjaman.store');
-
-    Route::get('peminjaman-riwayat',
-        [AdminPeminjamanController::class, 'riwayat']
-    )->name('peminjaman.riwayat');
-
-    Route::get('peminjaman-arsip',
-        [AdminPeminjamanController::class, 'arsip']
-    )->name('peminjaman.arsip');
-
-    Route::get('peminjaman/{peminjaman}',
-        [AdminPeminjamanController::class, 'show']
-    )->name('peminjaman.show');
-
-    Route::post('peminjaman/{peminjaman}/approve',
-        [AdminPeminjamanController::class, 'approve']
-    )->name('peminjaman.approve');
-
-    Route::post('peminjaman/{peminjaman}/reject',
-        [AdminPeminjamanController::class, 'reject']
-    )->name('peminjaman.reject');
-
-    Route::post('peminjaman/{peminjaman}/checkout',
-        [AdminPeminjamanController::class, 'checkout']
-    )->name('peminjaman.checkout');
-
-    // Pembayaran
-    Route::patch(
-        'peminjaman/{peminjaman}/pembayaran',
-        [AdminPeminjamanController::class, 'updatePembayaran']
-    )->name('peminjaman.updatePembayaran');
+    Route::get('peminjaman/check-seats',              [AdminPeminjamanController::class, 'checkSeats'])->name('peminjaman.checkSeats');
+    Route::get('peminjaman',                          [AdminPeminjamanController::class, 'index'])->name('peminjaman.index');
+    Route::get('peminjaman/create',                   [AdminPeminjamanController::class, 'create'])->name('peminjaman.create');
+    Route::post('peminjaman',                         [AdminPeminjamanController::class, 'store'])->name('peminjaman.store');
+    Route::get('peminjaman/eksternal-individu/create', [AdminPeminjamanController::class, 'createExternalIndividual'])->name('peminjaman.externalIndividual.create');
+    Route::post('peminjaman/eksternal-individu',       [AdminPeminjamanController::class, 'storeExternalIndividual'])->name('peminjaman.externalIndividual.store');
+    Route::get('peminjaman/eksternal-instansi/create', [AdminPeminjamanController::class, 'createExternalInstitution'])->name('peminjaman.externalInstitution.create');
+    Route::post('peminjaman/eksternal-instansi',       [AdminPeminjamanController::class, 'storeExternalInstitution'])->name('peminjaman.externalInstitution.store');
+    Route::get('peminjaman-riwayat',                  [AdminPeminjamanController::class, 'riwayat'])->name('peminjaman.riwayat');
+    Route::get('peminjaman-arsip',                    [AdminPeminjamanController::class, 'arsip'])->name('peminjaman.arsip');
+    Route::get('peminjaman/{peminjaman}',             [AdminPeminjamanController::class, 'show'])->name('peminjaman.show');
+    Route::post('peminjaman/{peminjaman}/approve',    [AdminPeminjamanController::class, 'approve'])->name('peminjaman.approve');
+    Route::post('peminjaman/{peminjaman}/reject',     [AdminPeminjamanController::class, 'reject'])->name('peminjaman.reject');
+    Route::post('peminjaman/{peminjaman}/confirm-payment', [AdminPeminjamanController::class, 'confirmPayment'])->name('peminjaman.confirmPayment');
+    Route::post('peminjaman/{peminjaman}/checkout',   [AdminPeminjamanController::class, 'checkout'])->name('peminjaman.checkout');
 
     // Inventaris
     Route::get('inventaris/{id_lab}',                        [AdminInventarisController::class, 'index'])->name('inventaris.index');
@@ -138,8 +107,6 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
 Route::middleware(['auth:mahasiswa'])->prefix('mahasiswa')->name('mahasiswa.')->group(function () {
 
     Route::get('/dashboard', [MahasiswaDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/profil',   [MahasiswaProfileController::class, 'edit'])->name('profil.edit');
-    Route::put('/profil',   [MahasiswaProfileController::class, 'update'])->name('profil.update');
     Route::post('/logout',   [MahasiswaAuthController::class, 'logout'])->name('logout');
 
     // Peminjaman – seat check must be BEFORE wildcard {peminjaman}

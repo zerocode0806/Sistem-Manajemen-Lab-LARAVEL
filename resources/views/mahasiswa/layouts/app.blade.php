@@ -115,25 +115,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .btn-blue { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; background: var(--blue); color: #fff; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500; cursor: pointer; text-decoration: none; transition: opacity .15s; white-space: nowrap; }
 .btn-blue:hover { opacity: .85; color: #fff; }
 
-/* ── FILTER TABS ── */
-.filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-
-.filter-tab {
-    padding: 6px 12px;
-    border-radius: 100px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12.5px;
-    font-weight: 500;
-    color: var(--muted);
-    cursor: pointer;
-    transition: background .15s, color .15s, border-color .15s;
-}
-
-.filter-tab:hover { background: var(--bg); color: var(--text); }
-.filter-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
 /* ── TABLE ── */
 .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 table { width: 100%; border-collapse: collapse; }
@@ -275,15 +256,6 @@ tbody tr:hover { background: var(--bg); }
         <li class="nav-item">
             <a class="nav-link @if(request()->routeIs('mahasiswa.peminjaman.arsip')) active @endif" href="{{ route('mahasiswa.peminjaman.arsip') }}">
                 <i class="bi bi-archive-fill"></i> Arsip
-            </a>
-        </li>
-    </ul>
-
-    <p class="nav-section">Akun</p>
-    <ul style="list-style:none;padding:0;margin:0">
-        <li class="nav-item">
-            <a class="nav-link @if(request()->routeIs('mahasiswa.profil.*')) active @endif" href="{{ route('mahasiswa.profil.edit') }}">
-                <i class="bi bi-person-circle"></i> Profil Saya
             </a>
         </li>
     </ul>
