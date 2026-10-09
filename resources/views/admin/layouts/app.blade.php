@@ -405,7 +405,21 @@ body {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    overflow: hidden;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 6px;
+    border: 1px solid var(--border);
 }
 
 table {
@@ -728,6 +742,11 @@ tbody tr:hover { background: var(--bg); }
     .form-card { padding: 20px; }
     .form-actions { flex-direction: column; align-items: stretch; }
     .form-actions-right { flex-direction: column; }
+    .table-card > table,
+    .table-scroll > table {
+        width: max-content;
+        min-width: 100%;
+    }
 }
 
 @media (max-width: 480px) {

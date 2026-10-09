@@ -32,7 +32,7 @@
             <div class="card-header-icon"><i class="bi bi-clock-history"></i></div>
             <h2>Riwayat Peminjaman</h2>
         </div>
-        <div style="overflow:hidden;border-radius:6px;border:1px solid var(--border)">
+        <div class="table-scroll">
             <table>
                 <thead><tr><th>Jenis</th><th>Tanggal</th><th>Status</th></tr></thead>
                 <tbody>

@@ -116,7 +116,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .btn-blue:hover { opacity: .85; color: #fff; }
 
 /* ── TABLE ── */
-.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); max-width: 100%; min-width: 0; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
 table { width: 100%; border-collapse: collapse; }
 thead th { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
 tbody td { padding: 13px 14px; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: middle; }
@@ -208,6 +208,7 @@ tbody tr:hover { background: var(--bg); }
     .page-header { flex-direction: column; align-items: flex-start; }
     .field-row { grid-template-columns: 1fr; }
     .form-card { padding: 20px; }
+    .table-card > table { width: max-content; min-width: 100%; }
 }
 @media (max-width: 480px) { .stat-grid { grid-template-columns: 1fr; } }
 </style>
