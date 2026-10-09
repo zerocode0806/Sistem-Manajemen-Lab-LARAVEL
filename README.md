@@ -1,58 +1,114 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistem Manajemen Laboratorium
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi berbasis Laravel untuk mengelola data laboratorium, inventaris, mahasiswa, dan peminjaman ruang atau perangkat.
 
-## About Laravel
+## Fitur
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Admin mengelola data laboratorium, mahasiswa, barang, dan akun admin.
+- Mahasiswa melihat informasi laboratorium serta membuat dan memantau peminjaman.
+- Admin mencatat peminjaman internal, eksternal individu, dan eksternal instansi.
+- Peminjaman eksternal dikenai tarif Rp75.000 per hari kalender. Tanggal mulai dan tanggal selesai dihitung.
+- Peminjaman eksternal yang dicatat admin langsung disetujui. Admin harus mengonfirmasi pelunasan sebelum checkout.
+- Peminjaman instansi menggunakan seluruh laboratorium selama periode peminjaman.
+- Admin mencatat checkout dan pengembalian aktual.
+- Admin memperbarui kondisi meja dan perangkat, melihat riwayat inventaris, serta mengekspor data inventaris.
+- Tabel daftar dapat digeser horizontal di layar ponsel.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Teknologi dan prasyarat
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.3 atau lebih baru
+- Composer
+- Node.js dan npm
+- MySQL atau SQLite
+- Laravel 13
 
-## Learning Laravel
+## Menjalankan secara lokal
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+1. Pasang dependensi PHP:
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+   ```bash
+   composer install
+   ```
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+2. Buat file environment dan application key:
 
-## Agentic Development
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+   Di Windows PowerShell, gunakan:
+
+   ```powershell
+   Copy-Item .env.example .env
+   php artisan key:generate
+   ```
+
+3. Atur koneksi database di `.env`. Contoh untuk MySQL:
+
+   ```dotenv
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=manajemen-lab
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
+
+   Buat database tersebut terlebih dahulu di MySQL. Untuk memakai SQLite, atur `DB_CONNECTION=sqlite` dan siapkan file database sesuai konfigurasi project.
+
+4. Jalankan migration:
+
+   ```bash
+   php artisan migrate
+   ```
+
+   **Jangan gunakan `php artisan migrate:fresh` pada database yang berisi data.** Perintah tersebut menghapus seluruh tabel sebelum membuatnya kembali.
+
+5. Pasang dan build aset frontend:
+
+   ```bash
+   npm install
+   npm run build
+   ```
+
+6. Jalankan server Laravel:
+
+   ```bash
+   php artisan serve
+   ```
+
+   Buka `http://127.0.0.1:8000`.
+
+   Untuk hot reload saat pengembangan, jalankan `npm run dev` di terminal terpisah.
+
+## Login
+
+### Admin
+
+- Halaman login: `http://127.0.0.1:8000/admin/login`
+- Username: `nama_cantik`
+- Password: `nama_cantik123`
+
+**Penting:** kredensial di atas dicantumkan sesuai permintaan, tetapi tidak dibuat oleh `DatabaseSeeder` pada repository ini. Akun tersebut hanya dapat digunakan jika sudah tersedia di tabel `admin`. Pada database baru, buat akun admin melalui `http://127.0.0.1:8000/admin/register`, lalu masuk lewat halaman login admin.
+
+Ganti password demo sebelum aplikasi digunakan di lingkungan publik atau produksi. Jangan unggah password aktif ke repository publik.
+
+### Mahasiswa
+
+- Halaman login: `http://127.0.0.1:8000/mahasiswa/login`
+- Mahasiswa masuk menggunakan NIM dengan password NIM juga, jangan lupa untuk mengubahnya setelah login.
+
+## Menjalankan tes
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+php artisan test
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Catatan keamanan dan data
 
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- Jangan membagikan atau memasukkan file `.env` ke repository.
+- Gunakan `APP_DEBUG=false` dan password yang kuat pada lingkungan produksi.
+- Batasi atau nonaktifkan pendaftaran admin publik sebelum aplikasi dipublikasikan.
+- Buat backup database secara berkala.
+- Gunakan `php artisan migrate` untuk menerapkan migration baru tanpa menghapus data yang sudah ada.
