@@ -5,6 +5,14 @@
 @php
     $namaBulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     $label = $namaBulan[$periode->bulan - 1] . ' ' . $periode->tahun;
+    $acRows = $periode->riwayatAc->sortBy('nomor_ac');
+    $mejaRows = $periode->riwayatMeja->sortBy('nomor_meja');
+    $conditionLabels = [
+        'normal' => 'Normal',
+        'rusak' => 'Rusak',
+        'instal_ulang' => 'Instal Ulang',
+        'tidak_ada' => 'Tidak Ada',
+    ];
 @endphp
 <title>Export Inventaris {{ $label }} – {{ $periode->lab->nama_lab }}</title>
 <style>
@@ -16,19 +24,37 @@ h2 { font-size: 15px; margin: 20px 0 8px; color: #333; }
 table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
 th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; font-size: 12px; }
 th { background: #f0f0f0; font-weight: 600; }
-.detail-info-table th:first-child { width: 12%; }
-.detail-info-table th:nth-child(2) { width: 23%; }
-.detail-info-table th:nth-child(3) { width: 65%; }
-.detail-info-table td { vertical-align: top; }
-.detail-info-table .text-cell {
+.table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.period-meja-table { table-layout: fixed; }
+.period-meja-table th,
+.period-meja-table td { vertical-align: top; overflow-wrap: anywhere; line-height: 1.4; }
+.period-meja-table th:nth-child(1) { width: 6%; }
+.period-meja-table th:nth-child(2) { width: 8%; }
+.period-meja-table th:nth-child(3) { width: 10%; }
+.period-meja-table th:nth-child(4) { width: 8%; }
+.period-meja-table th:nth-child(5) { width: 9%; }
+.period-meja-table th:nth-child(6) { width: 8%; }
+.period-meja-table th:nth-child(7) { width: 25%; }
+.period-meja-table th:nth-child(8) { width: 26%; }
+.period-meja-table .condition-cell { text-align: center; }
+.period-meja-table .text-cell {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     line-height: 1.45;
 }
 .print-btn { margin-bottom: 20px; padding: 8px 18px; background: #1A1A1A; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+@page { size: landscape; margin: 10mm; }
+@media screen and (max-width: 700px) {
+    body { padding: 14px; }
+    .table-scroll { margin-right: -2px; }
+    .period-meja-table { min-width: 980px; }
+}
 @media print {
     .print-btn { display: none; }
-    .detail-info-table tr { break-inside: avoid; page-break-inside: avoid; }
+    body { padding: 0; }
+    .table-scroll { overflow: visible; }
+    .period-meja-table { min-width: 0; }
+    .period-meja-table tr { break-inside: avoid; page-break-inside: avoid; }
 }
 </style>
 </head>
@@ -50,11 +76,11 @@ th { background: #f0f0f0; font-weight: 600; }
 </table>
 
 <h2>Kondisi AC</h2>
-@if($periode->riwayatAc->count() > 0)
+@if($acRows->count() > 0)
 <table>
     <thead><tr><th>Unit AC</th><th>Kondisi</th></tr></thead>
     <tbody>
-        @foreach($periode->riwayatAc as $ac)
+        @foreach($acRows as $ac)
         <tr><td>AC #{{ $ac->nomor_ac }}</td><td>{{ ucfirst($ac->kondisi) }}</td></tr>
         @endforeach
     </tbody>
@@ -63,37 +89,38 @@ th { background: #f0f0f0; font-weight: 600; }
 <p style="color:#888;margin-bottom:16px">Tidak ada data AC.</p>
 @endif
 
-<h2>Kondisi Meja & Perangkat</h2>
-@if($periode->riwayatMeja->count() > 0)
-<table>
-    <thead><tr><th>Meja</th><th>CPU</th><th>Keyboard</th><th>Mouse</th><th>Monitor</th><th>Kursi</th></tr></thead>
-    <tbody>
-        @foreach($periode->riwayatMeja as $m)
-        @php $lm = ['normal'=>'Normal','rusak'=>'Rusak','instal_ulang'=>'Instal Ulang','tidak_ada'=>'Tidak Ada']; @endphp
-        <tr>
-            <td>#{{ $m->nomor_meja }}</td>
-            <td>{{ $lm[$m->cpu_kondisi] ?? $m->cpu_kondisi }}</td>
-            <td>{{ $lm[$m->keyboard_kondisi] ?? $m->keyboard_kondisi }}</td>
-            <td>{{ $lm[$m->mouse_kondisi] ?? $m->mouse_kondisi }}</td>
-            <td>{{ $lm[$m->monitor_kondisi] ?? $m->monitor_kondisi }}</td>
-            <td>{{ $lm[$m->kursi_kondisi] ?? $m->kursi_kondisi }}</td>
-        </tr>
-        @endforeach
-    </tbody>
-</table>
-<h2>Detail Keterangan & Spesifikasi PC</h2>
-<table class="detail-info-table">
-    <thead><tr><th>Meja</th><th>Keterangan</th><th>Spesifikasi PC</th></tr></thead>
-    <tbody>
-        @foreach($periode->riwayatMeja as $m)
-        <tr>
-            <td>#{{ $m->nomor_meja }}</td>
-            <td class="text-cell">{{ $m->keterangan ?: 'Tidak ada keterangan.' }}</td>
-            <td class="text-cell">{{ $m->spesifikasi_pc ?: 'Belum ada spesifikasi PC.' }}</td>
-        </tr>
-        @endforeach
-    </tbody>
-</table>
+<h2>Kondisi Meja, Perangkat & Detail PC</h2>
+@if($mejaRows->count() > 0)
+<div class="table-scroll">
+    <table class="period-meja-table">
+        <thead>
+            <tr>
+                <th>Meja</th>
+                <th>CPU</th>
+                <th>Keyboard</th>
+                <th>Mouse</th>
+                <th>Monitor</th>
+                <th>Kursi</th>
+                <th>Keterangan</th>
+                <th>Spesifikasi PC</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($mejaRows as $m)
+            <tr>
+                <td>#{{ $m->nomor_meja }}</td>
+                <td class="condition-cell">{{ $conditionLabels[$m->cpu_kondisi] ?? ucfirst(str_replace('_', ' ', $m->cpu_kondisi ?? '-')) }}</td>
+                <td class="condition-cell">{{ $conditionLabels[$m->keyboard_kondisi] ?? ucfirst(str_replace('_', ' ', $m->keyboard_kondisi ?? '-')) }}</td>
+                <td class="condition-cell">{{ $conditionLabels[$m->mouse_kondisi] ?? ucfirst(str_replace('_', ' ', $m->mouse_kondisi ?? '-')) }}</td>
+                <td class="condition-cell">{{ $conditionLabels[$m->monitor_kondisi] ?? ucfirst(str_replace('_', ' ', $m->monitor_kondisi ?? '-')) }}</td>
+                <td class="condition-cell">{{ $conditionLabels[$m->kursi_kondisi] ?? ucfirst(str_replace('_', ' ', $m->kursi_kondisi ?? '-')) }}</td>
+                <td class="text-cell">{{ $m->keterangan ?: 'Tidak ada keterangan.' }}</td>
+                <td class="text-cell">{{ $m->spesifikasi_pc ?: 'Belum ada spesifikasi PC.' }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
 @else
 <p style="color:#888">Tidak ada data meja.</p>
 @endif
