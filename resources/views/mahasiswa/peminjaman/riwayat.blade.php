@@ -10,14 +10,7 @@
 <div class="toolbar">
     <div class="search-wrap">
         <i class="bi bi-search"></i>
-        <input type="text" class="search-input" id="searchInput" placeholder="Cari nama lab, barang, atau tanggal…">
-    </div>
-    <div class="filter-tabs" id="filterTabs">
-        <button class="filter-tab active" data-filter="all">Semua</button>
-        <button class="filter-tab" data-filter="menunggu">Menunggu</button>
-        <button class="filter-tab" data-filter="disetujui">Disetujui</button>
-        <button class="filter-tab" data-filter="ditolak">Ditolak</button>
-        <button class="filter-tab" data-filter="selesai">Selesai</button>
+        <input type="text" class="search-input" id="searchInput" placeholder="Cari NIM, nama, atau lab…">
     </div>
     <span class="row-count" id="rowCount"></span>
 </div>

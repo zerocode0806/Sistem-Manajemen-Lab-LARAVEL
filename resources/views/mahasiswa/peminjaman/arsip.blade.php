@@ -11,6 +11,7 @@
         <i class="bi bi-search"></i>
         <input type="text" class="search-input" id="searchInput" placeholder="Cari nama lab, barang, atau tanggal…">
     </div>
+    
     <span class="row-count" id="rowCount"></span>
 </div>
 
