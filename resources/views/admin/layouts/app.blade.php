@@ -197,6 +197,7 @@ body {
     margin-left: var(--sidebar-w);
     padding: 32px 36px;
     min-height: 100vh;
+    min-width: 0;
 }
 
 /* ── FLASH MESSAGES ── */
@@ -573,6 +574,7 @@ tbody tr:hover { background: var(--bg); }
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 20px 24px;
+    min-width: 0;
 }
 
 .card-header {
@@ -724,9 +726,57 @@ tbody tr:hover { background: var(--bg); }
 .breadcrumb i { font-size: 10px; }
 .breadcrumb .current { color: var(--text); font-weight: 500; }
 
+/* ── DETAIL MAHASISWA: RESPONSIVE ── */
+.mahasiswa-detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+    gap: 20px;
+    align-items: start;
+    min-width: 0;
+}
+
+.mahasiswa-detail-layout > .card {
+    min-width: 0;
+    width: 100%;
+}
+
+.mahasiswa-detail-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.mahasiswa-profile-card .info-item {
+    gap: 12px;
+}
+
+.mahasiswa-profile-card .info-label {
+    flex: 0 0 100px;
+    min-width: 0;
+}
+
+.mahasiswa-profile-card .info-value {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+    overflow-wrap: anywhere;
+}
+
+.mahasiswa-history-card .table-scroll {
+    max-width: 100%;
+}
+
+.mahasiswa-history-card table {
+    width: 100%;
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
     .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .mahasiswa-detail-layout { grid-template-columns: minmax(0, 1fr); }
+    .mahasiswa-profile-card .info-label { flex-basis: 120px; }
 }
 
 @media (max-width: 768px) {
@@ -737,6 +787,12 @@ tbody tr:hover { background: var(--bg); }
     .main { margin-left: 0; padding: 68px 16px 24px; }
     .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
     .page-header { flex-direction: column; align-items: flex-start; }
+    .mahasiswa-detail-header { align-items: stretch; gap: 14px; }
+    .mahasiswa-detail-actions { width: 100%; justify-content: flex-start; }
+    .mahasiswa-detail-actions a { flex: 1 1 auto; justify-content: center; }
+    .mahasiswa-detail-layout { gap: 14px; }
+    .mahasiswa-detail-layout .card { padding: 18px; }
+    .mahasiswa-history-card .table-scroll { width: 100%; }
     .field-row { grid-template-columns: 1fr; }
     .detail-grid { grid-template-columns: 1fr; }
     .form-card { padding: 20px; }
@@ -751,7 +807,20 @@ tbody tr:hover { background: var(--bg); }
 
 @media (max-width: 480px) {
     .stat-grid { grid-template-columns: 1fr; }
+    .main { padding: 64px 12px 20px; }
+    .mahasiswa-detail-header h1 { font-size: 20px; }
+    .mahasiswa-detail-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .mahasiswa-detail-actions a { min-width: 0; padding: 8px 10px; font-size: 12.5px; }
+    .mahasiswa-detail-layout .card { padding: 16px; }
+    .mahasiswa-profile-card .info-item { flex-direction: column; gap: 4px; padding: 11px 0; }
+    .mahasiswa-profile-card .info-label { flex: none; }
+    .mahasiswa-profile-card .info-value { text-align: left; width: 100%; }
+    .mahasiswa-history-card .card-header h2 { font-size: 14px; }
+    .mahasiswa-history-card .table-scroll > table { width: max-content; min-width: 100%; }
+    .mahasiswa-history-card thead th,
+    .mahasiswa-history-card tbody td { padding: 10px 11px; }
 }
+</style>
 </style>
 @stack('styles')
 </head>

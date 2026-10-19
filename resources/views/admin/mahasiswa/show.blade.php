@@ -7,16 +7,16 @@
     <i class="bi bi-chevron-right"></i><span class="current">{{ $mahasiswa->nama }}</span>
 </div>
 
-<div class="page-header">
-    <div><h1>Detail Mahasiswa</h1></div>
-    <div style="display:flex;gap:8px">
+<div class="page-header mahasiswa-detail-header">
+    <div class="mahasiswa-detail-heading"><h1>Detail Mahasiswa</h1></div>
+    <div class="mahasiswa-detail-actions">
         <a href="{{ route('admin.mahasiswa.edit', $mahasiswa->nim) }}" class="btn-primary"><i class="bi bi-pencil"></i> Edit</a>
         <a href="{{ route('admin.mahasiswa.index') }}" class="btn-secondary"><i class="bi bi-arrow-left"></i> Kembali</a>
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1.5fr;gap:20px;align-items:start">
-    <div class="card">
+<div class="mahasiswa-detail-layout">
+    <div class="card mahasiswa-profile-card">
         <div class="card-header">
             <div class="card-header-icon"><i class="bi bi-person"></i></div>
             <h2>Profil Mahasiswa</h2>
@@ -27,7 +27,7 @@
         <div class="info-item"><span class="info-label">Alamat</span><span class="info-value">{{ $mahasiswa->alamat }}</span></div>
     </div>
 
-    <div class="card">
+    <div class="card mahasiswa-history-card">
         <div class="card-header">
             <div class="card-header-icon"><i class="bi bi-clock-history"></i></div>
             <h2>Riwayat Peminjaman</h2>
