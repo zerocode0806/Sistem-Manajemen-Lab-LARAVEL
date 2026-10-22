@@ -357,12 +357,59 @@ class PeminjamanController extends Controller
         return view('admin.peminjaman.riwayat', compact('peminjaman'));
     }
 
-    public function arsip()
+    public function arsip(Request $request)
     {
-        $peminjaman = DataPinjam::with('mahasiswa')
-                         ->whereIn('status', ['selesai', 'ditolak'])
-                         ->orderByDesc('id_data')
-                         ->get();
+        $query = DataPinjam::with('mahasiswa')
+            ->whereIn('status', ['selesai', 'ditolak']);
+
+        $search = trim((string) $request->query('q', ''));
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                foreach ([
+                    'nim',
+                    'nim_eksternal',
+                    'nama_peminjam',
+                    'nama_instansi',
+                    'nama_lab',
+                    'nama_barang',
+                    'jenis',
+                    'kategori_peminjam',
+                    'tanggal',
+                    'tanggal_selesai',
+                ] as $column) {
+                    $builder->orWhere($column, 'like', '%' . $search . '%');
+                }
+
+                $builder->orWhereHas('mahasiswa', function ($mahasiswa) use ($search) {
+                    $mahasiswa->where('nama', 'like', '%' . $search . '%')
+                        ->orWhere('nim', 'like', '%' . $search . '%');
+                });
+            });
+        }
+
+        $status = $request->query('status');
+        if (in_array($status, ['selesai', 'ditolak'], true)) {
+            $query->where('status', $status);
+        }
+
+        $kategori = $request->query('kategori');
+        if ($kategori === 'eksternal') {
+            $query->whereIn('kategori_peminjam', ['eksternal_individu', 'eksternal_instansi']);
+        } elseif ($kategori === 'internal') {
+            $query->where(function ($builder) {
+                $builder->where('kategori_peminjam', 'internal')
+                    ->orWhereNull('kategori_peminjam');
+            });
+        } elseif (in_array($kategori, ['eksternal_individu', 'eksternal_instansi'], true)) {
+            $query->where('kategori_peminjam', $kategori);
+        }
+
+        $pembayaran = $request->query('pembayaran');
+        if (in_array($pembayaran, ['lunas', 'belum_lunas', 'tidak_berlaku'], true)) {
+            $query->where('status_pembayaran', $pembayaran);
+        }
+
+        $peminjaman = $query->orderByDesc('id_data')->get();
         return view('admin.peminjaman.arsip', compact('peminjaman'));
     }
 

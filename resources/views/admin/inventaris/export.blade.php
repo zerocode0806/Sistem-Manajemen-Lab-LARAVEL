@@ -5,26 +5,50 @@
 <title>Export Inventaris {{ $lab->nama_lab }}</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: Arial, sans-serif; font-size: 13px; padding: 30px; color: #111; }
-h1 { font-size: 18px; margin-bottom: 4px; }
-h2 { font-size: 15px; margin: 20px 0 8px; color: #333; }
-.meta { font-size: 12px; color: #555; margin-bottom: 20px; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; font-size: 12px; }
+body { font-family: Arial, sans-serif; font-size: 12px; padding: 20px; color: #111; }
+h1 { font-size: 17px; margin-bottom: 4px; }
+h2 { font-size: 14px; margin: 14px 0 6px; color: #333; }
+.meta { font-size: 10px; color: #555; margin-bottom: 12px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+th, td { border: 1px solid #bbb; padding: 4px 5px; text-align: left; font-size: 10px; }
 th { background: #f0f0f0; font-weight: 600; }
-.detail-info-table th:first-child { width: 12%; }
-.detail-info-table th:nth-child(2) { width: 23%; }
-.detail-info-table th:nth-child(3) { width: 65%; }
-.detail-info-table td { vertical-align: top; }
-.detail-info-table .text-cell {
-    white-space: pre-wrap;
+.table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.period-meja-table { table-layout: fixed; width: 100%; }
+.period-meja-table th,
+.period-meja-table td { vertical-align: top; overflow-wrap: anywhere; line-height: 1.25; }
+.period-meja-table th:nth-child(1) { width: 5%; }
+.period-meja-table th:nth-child(2) { width: 7%; }
+.period-meja-table th:nth-child(3) { width: 8%; }
+.period-meja-table th:nth-child(4) { width: 7%; }
+.period-meja-table th:nth-child(5) { width: 8%; }
+.period-meja-table th:nth-child(6) { width: 7%; }
+.period-meja-table th:nth-child(7) { width: 18%; }
+.period-meja-table th:nth-child(8) { width: 34%; }
+.period-meja-table .condition-cell { text-align: center; }
+.period-meja-table .text-cell {
+    white-space: normal;
     overflow-wrap: anywhere;
-    line-height: 1.45;
+    line-height: 1.25;
 }
 .print-btn { margin-bottom: 20px; padding: 8px 18px; background: #1A1A1A; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+@page { size: landscape; margin: 8mm; }
+@media screen and (max-width: 700px) {
+    body { padding: 14px; }
+    .table-scroll { margin-right: -2px; }
+    .period-meja-table { min-width: 980px; }
+}
 @media print {
     .print-btn { display: none; }
-    .detail-info-table tr { break-inside: avoid; page-break-inside: avoid; }
+    body { padding: 0; font-size: 11px; }
+    .table-scroll { overflow: visible; }
+    .period-meja-table { min-width: 0; }
+    th, td { padding: 3px 4px; font-size: 10px; }
+    h1 { font-size: 15px; }
+    h2 { font-size: 12px; margin: 10px 0 5px; }
+    .meta { font-size: 9px; margin-bottom: 8px; }
+    table { margin-bottom: 7px; }
+    .period-meja-table th, .period-meja-table td { line-height: 1.2; }
+    .period-meja-table tr { break-inside: avoid; page-break-inside: avoid; }
 }
 </style>
 </head>

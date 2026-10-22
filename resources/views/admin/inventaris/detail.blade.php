@@ -95,7 +95,6 @@
 
 .periode-meja-table .periode-detail-column {
     min-width: 150px;
-    text-align: center;
 }
 
 .periode-meja-mobile-list {
