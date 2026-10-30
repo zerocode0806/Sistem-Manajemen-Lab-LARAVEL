@@ -45,8 +45,8 @@
         <div class="info-item"><span class="info-label">Nomor Kursi</span><span class="info-value mono">{{ $peminjaman->seluruh_lab ? 'Seluruh lab' : ($peminjaman->kursi ?? '-') }}</span></div>
     @endif
 
-    <div class="info-item"><span class="info-label">Mulai</span><span class="info-value mono">{{ $tanggalMulai->format('l, d MMMM Y') }} · {{ substr($peminjaman->jam_mulai,0,5) }}</span></div>
-    <div class="info-item"><span class="info-label">Jadwal selesai</span><span class="info-value mono">{{ $tanggalSelesai->format('l, d MMMM Y') }} · {{ substr($peminjaman->jam_selesai,0,5) }}</span></div>
+    <div class="info-item"><span class="info-label">Mulai</span><span class="info-value mono">{{ $tanggalMulai->format('l, d M Y') }} · {{ substr($peminjaman->jam_mulai,0,5) }}</span></div>
+    <div class="info-item"><span class="info-label">Jadwal selesai</span><span class="info-value mono">{{ $tanggalSelesai->format('l, d M Y') }} · {{ substr($peminjaman->jam_selesai,0,5) }}</span></div>
     @if($peminjaman->tanggal_dikembalikan || $peminjaman->jam_dikembalikan)
         <div class="info-item"><span class="info-label">Dikembalikan aktual</span><span class="info-value mono">{{ $peminjaman->tanggal_dikembalikan ? \Carbon\Carbon::parse($peminjaman->tanggal_dikembalikan)->format('d M Y') : '-' }} · {{ $peminjaman->jam_dikembalikan ? substr($peminjaman->jam_dikembalikan, 0, 5) : '-' }}</span></div>
     @endif

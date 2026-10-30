@@ -22,7 +22,7 @@ class PeminjamanController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validated = $request->validate([   
             'jenis'       => ['required', 'in:lab,barang'],
             'tanggal'     => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal'],
@@ -39,6 +39,15 @@ class PeminjamanController extends Controller
             return back()->withInput()->withErrors([
                 'jam_selesai' => 'Waktu akhir harus setelah waktu mulai.',
             ]);
+        }
+
+        // Jika peminjaman barang, ambil nama barang dan lab asalnya
+        if ($validated['jenis'] === 'barang') {
+            $barang = DataBarang::with('lab')
+                ->findOrFail($validated['id_barang']);
+
+            $validated['nama_barang'] = $barang->nama_barang;
+            $validated['nama_lab'] = $barang->lab->nama_lab ?? null;
         }
 
         if ($validated['jenis'] === 'lab') {
@@ -63,7 +72,7 @@ class PeminjamanController extends Controller
             }
         }
 
-        $validated['nim']    = Auth::guard('mahasiswa')->user()->nim;
+        $validated['nim'] = Auth::guard('mahasiswa')->user()->nim;
         $validated['kategori_peminjam'] = 'internal';
         $validated['seluruh_lab'] = false;
         $validated['status'] = 'menunggu';
@@ -71,7 +80,7 @@ class PeminjamanController extends Controller
         DataPinjam::create($validated);
 
         return redirect()->route('mahasiswa.peminjaman.riwayat')
-                         ->with('success', 'Peminjaman berhasil diajukan, silahkan pergi ke ICT center untuk menyerahkan kartu identitas.');
+            ->with('success', 'Peminjaman berhasil diajukan, silahkan pergi ke ICT center untuk menyerahkan kartu identitas.');
     }
 
     public function riwayat()

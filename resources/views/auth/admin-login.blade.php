@@ -77,11 +77,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
             <button type="submit" class="btn-submit">Masuk</button>
         </form>
 
-        <div class="divider">atau</div>
-
-        <div style="text-align:center;font-size:13px;color:var(--muted)">
-            Belum punya akun admin? <a href="{{ route('admin.register') }}">Daftar di sini</a>
-        </div>
     </div>
     <div class="login-footer">
         Login sebagai mahasiswa? <a href="{{ route('mahasiswa.login') }}">Klik di sini</a>

@@ -2,6 +2,49 @@
 @section('title', 'Ajukan Peminjaman')
 @section('content')
 
+<style>
+.barang-preview {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px;
+    margin-top: -8px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--card, #fff);
+}
+
+.barang-preview img {
+    width: 75px;
+    height: 75px;
+    object-fit: cover;
+    border-radius: 7px;
+    background: #f1f1f1;
+}
+
+.barang-preview-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 12.5px;
+    color: var(--muted);
+}
+
+#barangPreviewNama {
+    color: var(--text, #222);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+@media (max-width: 480px) {
+    .barang-preview img {
+        width: 65px;
+        height: 65px;
+    }
+}
+</style>
+
 <div class="page-header">
     <div><h1>Ajukan Peminjaman</h1><p>Isi formulir berikut untuk mengajukan peminjaman</p></div>
 </div>
@@ -47,27 +90,54 @@
         <div id="section_barang" style="display:none">
             <div class="field-row">
                 <div class="field-group">
-                    <label for="id_barang">Pilih Barang <span style="color:var(--red)">*</span></label>
+                    <label for="id_barang">
+                        Pilih Barang <span style="color:var(--red)">*</span>
+                    </label>
+
                     <select id="id_barang" name="id_barang" onchange="setBarangHidden(this)">
                         <option value="">— Pilih Barang —</option>
                         @foreach($barang as $b)
                             <option value="{{ $b->id_barang }}"
-                                    data-nama="{{ $b->nama_barang }}"
-                                    data-lab="{{ $b->lab->nama_lab ?? '' }}"
-                                    @selected(old('id_barang') == $b->id_barang)>
+                                data-nama="{{ $b->nama_barang }}"
+                                data-lab="{{ $b->lab->nama_lab ?? '' }}"
+                                data-stok="{{ $b->stok }}"
+                                data-gambar="{{ $b->gambar ? asset('storage/' . $b->gambar) : '' }}"
+                                @selected(old('id_barang') == $b->id_barang)>
                                 {{ $b->nama_barang }} (stok: {{ $b->stok }}) — {{ $b->lab->nama_lab ?? '' }}
                             </option>
                         @endforeach
                     </select>
-                    @error('id_barang')<span class="field-error">{{ $message }}</span>@enderror
+
+                    @error('id_barang')
+                        <span class="field-error">{{ $message }}</span>
+                    @enderror
                 </div>
+
                 <div class="field-group">
-                    <label for="jumlah">Jumlah <span style="color:var(--red)">*</span></label>
-                    <input type="number" id="jumlah" name="jumlah" value="{{ old('jumlah', 1) }}" min="1">
-                    @error('jumlah')<span class="field-error">{{ $message }}</span>@enderror
+                    <label for="jumlah">
+                        Jumlah <span style="color:var(--red)">*</span>
+                    </label>
+                    <input type="number" id="jumlah" name="jumlah"
+                        value="{{ old('jumlah', 1) }}" min="1">
+                    @error('jumlah')
+                        <span class="field-error">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
-            <input type="hidden" name="nama_barang" id="nama_barang_hidden" value="{{ old('nama_barang') }}">
+
+            {{-- Preview barang terpilih --}}
+            <div id="barangPreview" class="barang-preview" style="display:none">
+                <img id="barangPreviewImage" src="" alt="Gambar barang">
+
+                <div class="barang-preview-info">
+                    <div id="barangPreviewNama"></div>
+                    <span id="barangPreviewStok"></span>
+                    <span id="barangPreviewLab"></span>
+                </div>
+            </div>
+
+            <input type="hidden" name="nama_barang" id="nama_barang_hidden"
+                value="{{ old('nama_barang') }}">
         </div>
 
         {{-- DATE & TIME --}}
@@ -133,44 +203,104 @@
 
 @push('scripts')
 <script>
-function toggleJenis(val) {
-    document.getElementById('section_lab').style.display    = val === 'lab'    ? '' : 'none';
-    document.getElementById('section_barang').style.display = val === 'barang' ? '' : 'none';
-    document.getElementById('seatPickerSection').style.display = val === 'lab' ? '' : 'none';
 
-    // Make kursi required only for lab
-    document.getElementById('spKursiInput').required = (val === 'lab');
+    const selectedBarang = document.getElementById('id_barang').value;
 
-    if (val === 'lab') window.SeatPicker && window.SeatPicker.checkAndFetch();
-}
-
-function onLabChange() {
-    window.SeatPicker && window.SeatPicker.checkAndFetch();
-}
-
-function onScheduleChange() {
-    const startDate = document.getElementById('tanggalInput').value;
-    const endDate = document.getElementById('tanggalSelesaiInput');
-    endDate.min = startDate || '{{ date('Y-m-d') }}';
-    if (startDate && (!endDate.value || endDate.value < startDate)) endDate.value = startDate;
-    window.SeatPicker && window.SeatPicker.checkAndFetch();
-}
-
-function setBarangHidden(sel) {
-    const opt = sel.options[sel.selectedIndex];
-    document.getElementById('nama_barang_hidden').value = opt.getAttribute('data-nama') || '';
-}
-
-// Init on page load
-(function () {
-    const jenis = '{{ old("jenis", "lab") }}';
-    toggleJenis(jenis);
-    onScheduleChange();
-    // Re-check if old values present
-    if (jenis === 'lab') {
-        setTimeout(function () { window.SeatPicker && window.SeatPicker.checkAndFetch(); }, 100);
+    if (selectedBarang) {
+        pilihBarang(selectedBarang);
     }
-})();
+    function toggleJenis(val) {
+        document.getElementById('section_lab').style.display    = val === 'lab'    ? '' : 'none';
+        document.getElementById('section_barang').style.display = val === 'barang' ? '' : 'none';
+        document.getElementById('seatPickerSection').style.display = val === 'lab' ? '' : 'none';
+
+        // Make kursi required only for lab
+        document.getElementById('spKursiInput').required = (val === 'lab');
+
+        if (val === 'lab') window.SeatPicker && window.SeatPicker.checkAndFetch();
+    }
+
+    function onLabChange() {
+        window.SeatPicker && window.SeatPicker.checkAndFetch();
+    }
+
+    function onScheduleChange() {
+        const startDate = document.getElementById('tanggalInput').value;
+        const endDate = document.getElementById('tanggalSelesaiInput');
+        endDate.min = startDate || '{{ date('Y-m-d') }}';
+        if (startDate && (!endDate.value || endDate.value < startDate)) endDate.value = startDate;
+        window.SeatPicker && window.SeatPicker.checkAndFetch();
+    }
+
+    function setBarangHidden(sel) {
+        const opt = sel.options[sel.selectedIndex];
+        document.getElementById('nama_barang_hidden').value = opt.getAttribute('data-nama') || '';
+    }
+
+    // Init on page load
+    (function () {
+        const jenis = '{{ old("jenis", "lab") }}';
+        toggleJenis(jenis);
+        onScheduleChange();
+        // Re-check if old values present
+        if (jenis === 'lab') {
+            setTimeout(function () { window.SeatPicker && window.SeatPicker.checkAndFetch(); }, 100);
+        }
+    })();
+
+    function pilihBarang(id) {
+        const select = document.getElementById('id_barang');
+
+        select.value = id;
+
+        // Perbarui nama barang tersembunyi
+        setBarangHidden(select);
+
+        // Perbarui tampilan pilihan
+        document.querySelectorAll('.barang-option').forEach(card => {
+            card.classList.toggle(
+                'selected',
+                card.dataset.id === id
+            );
+        });
+    }
+
+    function setBarangHidden(sel) {
+        const opt = sel.options[sel.selectedIndex];
+        const preview = document.getElementById('barangPreview');
+
+        if (!opt || !opt.value) {
+            document.getElementById('nama_barang_hidden').value = '';
+            preview.style.display = 'none';
+            return;
+        }
+
+        document.getElementById('nama_barang_hidden').value =
+            opt.getAttribute('data-nama') || '';
+
+        const gambar = opt.getAttribute('data-gambar');
+
+        document.getElementById('barangPreviewNama').textContent =
+            opt.getAttribute('data-nama') || '';
+
+        document.getElementById('barangPreviewStok').textContent =
+            'Stok tersedia: ' + (opt.getAttribute('data-stok') || '0');
+
+        document.getElementById('barangPreviewLab').textContent =
+            'Laboratorium: ' + (opt.getAttribute('data-lab') || '-');
+
+        const img = document.getElementById('barangPreviewImage');
+
+        if (gambar) {
+            img.src = gambar;
+            img.style.display = 'block';
+        } else {
+            img.removeAttribute('src');
+            img.style.display = 'none';
+        }
+
+        preview.style.display = 'flex';
+}
 </script>
 @endpush
 @endsection

@@ -162,7 +162,7 @@ class PeminjamanController extends Controller
             'seluruh_lab' => false,
             'status' => 'disetujui',
             'biaya_peminjaman' => $this->externalBookingFee($validated['tanggal'], $validated['tanggal_selesai']),
-            'status_pembayaran' => 'belum_lunas',
+            'status_pembayaran' => 'belum_bayar',
             'pembayaran_dikonfirmasi_pada' => null,
         ]));
 
@@ -212,7 +212,7 @@ class PeminjamanController extends Controller
             'seluruh_lab' => true,
             'status' => 'disetujui',
             'biaya_peminjaman' => $this->externalBookingFee($validated['tanggal'], $validated['tanggal_selesai']),
-            'status_pembayaran' => 'belum_lunas',
+            'status_pembayaran' => 'belum_bayar',
             'pembayaran_dikonfirmasi_pada' => null,
         ]));
 
@@ -405,7 +405,7 @@ class PeminjamanController extends Controller
         }
 
         $pembayaran = $request->query('pembayaran');
-        if (in_array($pembayaran, ['lunas', 'belum_lunas', 'tidak_berlaku'], true)) {
+        if (in_array($pembayaran, ['lunas', 'belum_bayar', 'tidak_berlaku'], true)) {
             $query->where('status_pembayaran', $pembayaran);
         }
 

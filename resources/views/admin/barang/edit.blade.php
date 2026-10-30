@@ -18,7 +18,9 @@
         @csrf @method('DELETE')
     </form>
 
-    <form action="{{ route('admin.barang.update', $barang->id_barang) }}" method="POST">
+    <form action="{{ route('admin.barang.update', $barang->id_barang) }}"
+      method="POST"
+      enctype="multipart/form-data">
         @csrf @method('PUT')
 
         <div class="field-group">
@@ -49,6 +51,35 @@
             <label for="nama_barang">Nama Barang <span style="color:var(--red)">*</span></label>
             <input type="text" id="nama_barang" name="nama_barang" value="{{ old('nama_barang', $barang->nama_barang) }}" required>
             @error('nama_barang')<span class="field-error">{{ $message }}</span>@enderror
+        </div>
+
+        <div class="field-group">
+    <label for="gambar">Gambar Barang</label>
+
+    @if($barang->gambar)
+        <div style="margin-bottom:10px">
+            <img
+                src="{{ asset('storage/' . $barang->gambar) }}"
+                alt="{{ $barang->nama_barang }}"
+                style="width:160px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)"
+            >
+        </div>
+            @endif
+
+            <input
+                type="file"
+                id="gambar"
+                name="gambar"
+                accept="image/jpeg,image/png,image/webp"
+            >
+
+            <small style="color:var(--muted)">
+                Kosongkan jika ingin mempertahankan gambar lama.
+            </small>
+
+            @error('gambar')
+                <span class="field-error">{{ $message }}</span>
+            @enderror
         </div>
 
         <div class="field-row">
