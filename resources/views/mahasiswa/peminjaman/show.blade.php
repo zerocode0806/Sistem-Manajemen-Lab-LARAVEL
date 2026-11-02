@@ -7,6 +7,54 @@
     $tanggalSelesai = \Carbon\Carbon::parse($peminjaman->tanggal_selesai ?: $peminjaman->tanggal);
 @endphp
 
+<style>
+    /* Preview gambar barang pada detail peminjaman */
+.detail-barang-preview {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px;
+    margin-bottom: 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+}
+
+.detail-barang-preview img {
+    width: 85px;
+    height: 85px;
+    object-fit: cover;
+    border-radius: 7px;
+    background: #f1f1f1;
+    flex-shrink: 0;
+}
+
+.detail-barang-preview-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.detail-barang-preview-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.detail-barang-preview-caption {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+@media (max-width: 480px) {
+    .detail-barang-preview img {
+        width: 70px;
+        height: 70px;
+    }
+}
+</style>
+
 <div class="breadcrumb">
     <a href="{{ route('mahasiswa.peminjaman.riwayat') }}">Riwayat</a>
     <i class="bi bi-chevron-right"></i><span class="current">Detail #{{ $peminjaman->id_data }}</span>
@@ -37,9 +85,41 @@
     </div>
 
     @if($peminjaman->jenis === 'barang')
-        <div class="info-item"><span class="info-label">Nama Barang</span><span class="info-value" style="font-weight:500">{{ $peminjaman->nama_barang }}</span></div>
-        <div class="info-item"><span class="info-label">Jumlah</span><span class="info-value mono">{{ $peminjaman->jumlah }} unit</span></div>
-        <div class="info-item"><span class="info-label">Lab Asal</span><span class="info-value">{{ $peminjaman->nama_lab }}</span></div>
+        {{-- Preview Gambar Barang --}}
+        @if($peminjaman->barang?->gambar)
+            <div class="detail-barang-preview">
+                <img
+                    src="{{ asset('storage/' . $peminjaman->barang->gambar) }}"
+                    alt="{{ $peminjaman->nama_barang }}"
+                    onerror="this.style.display='none'"
+                >
+                <div class="detail-barang-preview-info">
+                    <span class="detail-barang-preview-name">
+                        {{ $peminjaman->nama_barang ?? '-' }}
+                    </span>
+                    <span class="detail-barang-preview-caption">
+                        Barang yang Anda pinjam
+                    </span>
+                </div>
+            </div>
+        @endif
+
+        <div class="info-item">
+            <span class="info-label">Nama Barang</span>
+            <span class="info-value" style="font-weight:500">
+                {{ $peminjaman->nama_barang ?? '-' }}
+            </span>
+        </div>
+
+        <div class="info-item">
+            <span class="info-label">Jumlah</span>
+            <span class="info-value mono">{{ $peminjaman->jumlah }} unit</span>
+        </div>
+
+        <div class="info-item">
+            <span class="info-label">Lab Asal</span>
+            <span class="info-value">{{ $peminjaman->nama_lab ?? '-' }}</span>
+        </div>
     @else
         <div class="info-item"><span class="info-label">Laboratorium</span><span class="info-value" style="font-weight:500">{{ $peminjaman->nama_lab }}</span></div>
         <div class="info-item"><span class="info-label">Nomor Kursi</span><span class="info-value mono">{{ $peminjaman->seluruh_lab ? 'Seluruh lab' : ($peminjaman->kursi ?? '-') }}</span></div>
