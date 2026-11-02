@@ -9,13 +9,25 @@ use Illuminate\Support\Facades\Hash;
 
 class MahasiswaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $mahasiswa = Mahasiswa::orderBy('nim', 'asc')
+        $q = trim($request->query('q', ''));
+
+        $mahasiswa = Mahasiswa::query()
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('nim', 'like', "%{$q}%")
+                        ->orWhere('nama', 'like', "%{$q}%")
+                        ->orWhere('no_telepon', 'like', "%{$q}%")
+                        ->orWhere('alamat', 'like', "%{$q}%");
+                });
+            })
+            ->orderBy('nim', 'asc')
             ->paginate(10)
+            ->onEachSide(1)
             ->withQueryString();
 
-        return view('admin.mahasiswa.index', compact('mahasiswa'));
+        return view('admin.mahasiswa.index', compact('mahasiswa', 'q'));
     }
 
     public function create()

@@ -261,6 +261,15 @@ tbody tr:hover { background: var(--bg); }
         </li>
     </ul>
 
+    <p class="nav-section">Akun</p>
+    <ul style="list-style:none;padding:0;margin:0">
+        <li class="nav-item">
+            <a class="nav-link @if(request()->routeIs('mahasiswa.profil.*')) active @endif" href="{{ route('mahasiswa.profil.edit') }}">
+                <i class="bi bi-person-circle"></i> Profil Saya
+            </a>
+        </li>
+    </ul>
+
     <div class="sidebar-spacer"></div>
 
     <ul style="list-style:none;padding:0;margin:0 0 12px">

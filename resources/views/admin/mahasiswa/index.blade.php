@@ -2,92 +2,17 @@
 @section('title', 'Data Mahasiswa')
 @section('content')
 
-<style>
-    /* Pagination mahasiswa */
-.pagination-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 16px 20px;
-    border-top: 1px solid var(--border);
-    flex-wrap: wrap;
-}
-
-.pagination-info {
-    font-size: 12.5px;
-    color: var(--muted);
-}
-
-.pagination-links nav {
-    display: flex;
-    align-items: center;
-}
-
-.pagination-links nav > div:first-child {
-    display: none;
-}
-
-.pagination-links nav > div:last-child {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.pagination-links a,
-.pagination-links span[aria-current="page"] span,
-.pagination-links span[aria-disabled="true"] span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 34px;
-    height: 34px;
-    padding: 0 10px;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    font-size: 12.5px;
-    text-decoration: none;
-    color: var(--text);
-    background: var(--card);
-}
-
-.pagination-links span[aria-current="page"] span {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-}
-
-.pagination-links a:hover {
-    background: var(--bg);
-}
-
-.pagination-links span[aria-disabled="true"] span {
-    opacity: .45;
-}
-
-@media (max-width: 600px) {
-    .pagination-wrapper {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .pagination-links {
-        width: 100%;
-        overflow-x: auto;
-    }
-}
-</style>
-
 <div class="page-header">
     <div><h1>Data Mahasiswa</h1><p>Kelola data mahasiswa yang terdaftar di sistem</p></div>
     <a href="{{ route('admin.mahasiswa.create') }}" class="btn-primary"><i class="bi bi-plus"></i> Tambah Mahasiswa</a>
 </div>
 
 <div class="toolbar">
-    <div class="search-wrap">
+    <form method="GET" action="{{ route('admin.mahasiswa.index') }}" class="search-wrap" id="searchForm">
         <i class="bi bi-search"></i>
-        <input type="text" class="search-input" id="searchInput" placeholder="Cari nama atau NIM mahasiswa…">
-    </div>
+        <input type="text" name="q" id="searchInput" class="search-input"
+            value="{{ $q }}" placeholder="Cari nama, NIM, telepon…" autocomplete="off">
+    </form>
     <span class="row-count" id="rowCount"></span>
 </div>
 
@@ -123,34 +48,35 @@
         </tbody>
     </table>
 
-    {{-- PAGINATION --}}
-    @if($mahasiswa->hasPages())
-        <div class="pagination-wrapper">
-            <div class="pagination-info">
-                Menampilkan
-                <strong>{{ $mahasiswa->firstItem() }}–{{ $mahasiswa->lastItem() }}</strong>
-                dari
-                <strong>{{ $mahasiswa->total() }}</strong> mahasiswa
-            </div>
+    
+</div>
 
-            <div class="pagination-links">
-                {{ $mahasiswa->links() }}
-            </div>
-        </div>
-    @endif
+<div class="pagination-wrapper">
+    <div class="pagination-info"> ... </div>
+    {{ $mahasiswa->links('vendor.pagination.lab') }}
 </div>
 
 @push('scripts')
 <script>
-const rows = Array.from(document.querySelectorAll('#tableBody tr')).filter(r => r.querySelectorAll('td').length > 1);
-rows.forEach(r => r.setAttribute('data-search', r.textContent.toLowerCase()));
-const rc = document.getElementById('rowCount');
-rc.textContent = rows.length + ' mahasiswa';
-document.getElementById('searchInput').addEventListener('input', function() {
-    const q = this.value.toLowerCase(); let v = 0;
-    rows.forEach(r => { const s = r.getAttribute('data-search').includes(q); r.style.display = s ? '' : 'none'; if(s) v++; });
-    rc.textContent = v + ' mahasiswa';
+// Search otomatis 400ms setelah berhenti mengetik (Enter juga tetap bisa)
+const form  = document.getElementById('searchForm');
+const input = document.getElementById('searchInput');
+let timer;
+
+input.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+        sessionStorage.setItem('refocusSearch', '1');
+        form.submit();
+    }, 400);
 });
+
+// Kembalikan fokus ke kolom search setelah halaman reload karena mengetik
+if (sessionStorage.getItem('refocusSearch')) {
+    sessionStorage.removeItem('refocusSearch');
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+}
 </script>
 @endpush
 @endsection
