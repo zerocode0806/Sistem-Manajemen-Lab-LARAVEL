@@ -82,6 +82,10 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     // Inventaris
     Route::get('inventaris/{id_lab}',                        [AdminInventarisController::class, 'index'])->name('inventaris.index');
     Route::post('inventaris/update',                         [AdminInventarisController::class, 'update'])->name('inventaris.update');
+    Route::post('inventaris/{id_lab}/pc',                    [AdminInventarisController::class, 'storePc'])->name('inventaris.pc.store');
+    Route::delete('inventaris/{id_lab}/pc/{id_meja}',        [AdminInventarisController::class, 'hapusPc'])->name('inventaris.pc.destroy');
+    Route::post('inventaris/{id_lab}/tambahan',               [AdminInventarisController::class, 'storeTambahan'])->name('inventaris.tambahan.store');
+    Route::delete('inventaris/{id_lab}/tambahan/{id_item}',   [AdminInventarisController::class, 'hapusTambahan'])->name('inventaris.tambahan.destroy');
     Route::post('inventaris/{id_lab}/tambah-ac',             [AdminInventarisController::class, 'tambahAc'])->name('inventaris.tambahAc');
     Route::get('inventaris/{id_lab}/hapus-ac/{id_ac}',       [AdminInventarisController::class, 'hapusAc'])->name('inventaris.hapusAc');
     Route::post('inventaris/{id_lab}/simpan-periode',        [AdminInventarisController::class, 'simpanPeriode'])->name('inventaris.simpanPeriode');

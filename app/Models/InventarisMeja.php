@@ -25,6 +25,11 @@ class InventarisMeja extends Model
         'kursi_kondisi',
         'keterangan',
         'spesifikasi_pc',
+        'cpu_status',
+        'monitor_status',
+        'keyboard_status',
+        'mouse_status',
+        'windows_status',
     ];
 
     public function lab()

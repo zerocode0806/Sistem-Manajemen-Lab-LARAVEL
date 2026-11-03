@@ -1,134 +1,177 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
+
 <head>
-<meta charset="UTF-8">
-@php
-    $namaBulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-    $label = $namaBulan[$periode->bulan - 1] . ' ' . $periode->tahun;
-    $acRows = $periode->riwayatAc->sortBy('nomor_ac');
-    $mejaRows = $periode->riwayatMeja->sortBy('nomor_meja');
-    $conditionLabels = [
-        'normal' => 'Normal',
-        'rusak' => 'Rusak',
-        'instal_ulang' => 'Instal Ulang',
-        'tidak_ada' => 'Tidak Ada',
-    ];
-@endphp
-<title>Export Inventaris {{ $label }} – {{ $periode->lab->nama_lab }}</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: Arial, sans-serif; font-size: 12px; padding: 20px; color: #111; }
-h1 { font-size: 17px; margin-bottom: 4px; }
-h2 { font-size: 14px; margin: 14px 0 6px; color: #333; }
-.meta { font-size: 10px; color: #555; margin-bottom: 12px; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-th, td { border: 1px solid #bbb; padding: 4px 5px; text-align: left; font-size: 10px; }
-th { background: #f0f0f0; font-weight: 600; }
-.table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.period-meja-table { table-layout: fixed; width: 100%; }
-.period-meja-table th,
-.period-meja-table td { vertical-align: top; overflow-wrap: anywhere; line-height: 1.25; }
-.period-meja-table th:nth-child(1) { width: 5%; }
-.period-meja-table th:nth-child(2) { width: 7%; }
-.period-meja-table th:nth-child(3) { width: 8%; }
-.period-meja-table th:nth-child(4) { width: 7%; }
-.period-meja-table th:nth-child(5) { width: 8%; }
-.period-meja-table th:nth-child(6) { width: 7%; }
-.period-meja-table th:nth-child(7) { width: 18%; }
-.period-meja-table th:nth-child(8) { width: 34%; }
-.period-meja-table .condition-cell { text-align: center; }
-.period-meja-table .text-cell {
-    white-space: normal;
-    overflow-wrap: anywhere;
-    line-height: 1.25;
-}
-.print-btn { margin-bottom: 20px; padding: 8px 18px; background: #1A1A1A; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
-@page { size: landscape; margin: 8mm; }
-@media screen and (max-width: 700px) {
-    body { padding: 14px; }
-    .table-scroll { margin-right: -2px; }
-    .period-meja-table { min-width: 980px; }
-}
-@media print {
-    .print-btn { display: none; }
-    body { padding: 0; font-size: 11px; }
-    .table-scroll { overflow: visible; }
-    .period-meja-table { min-width: 0; }
-    th, td { padding: 3px 4px; font-size: 10px; }
-    h1 { font-size: 15px; }
-    h2 { font-size: 12px; margin: 10px 0 5px; }
-    .meta { font-size: 9px; margin-bottom: 8px; }
-    table { margin-bottom: 7px; }
-    .period-meja-table th, .period-meja-table td { line-height: 1.2; }
-    .period-meja-table tr { break-inside: avoid; page-break-inside: avoid; }
-}
-</style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Snapshot Inventaris {{ $periode->lab->nama_lab }}</title>
+    <style>
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            font: 12px Arial, sans-serif;
+            color: #17202a;
+            padding: 20px
+        }
+
+        h1 {
+            font-size: 18px;
+            margin: 0 0 5px
+        }
+
+        h2 {
+            font-size: 14px;
+            margin: 18px 0 7px
+        }
+
+        .meta {
+            color: #555;
+            margin-bottom: 12px
+        }
+
+        .scroll {
+            width: 100%;
+            overflow: auto
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 10px
+        }
+
+        th,
+        td {
+            border: 1px solid #9aa4aa;
+            padding: 6px;
+            text-align: left;
+            vertical-align: top
+        }
+
+        th {
+            background: #d9f6f6
+        }
+
+        .print {
+            margin-bottom: 15px;
+            padding: 8px 13px;
+            background: #163b50;
+            color: #fff;
+            border: 0;
+            border-radius: 5px
+        }
+
+        @media(max-width:650px) {
+            body {
+                padding: 12px
+            }
+
+            .scroll table {
+                min-width: 720px
+            }
+        }
+
+        @media print {
+            .print {
+                display: none
+            }
+
+            body {
+                padding: 0
+            }
+
+            .scroll {
+                overflow: visible
+            }
+
+            .scroll table {
+                min-width: 0
+            }
+
+            h2 {
+                break-after: avoid
+            }
+
+            tr {
+                break-inside: avoid
+            }
+        }
+    </style>
 </head>
+
 <body>
-<button class="print-btn" onclick="window.print()">🖨 Cetak / Simpan PDF</button>
-
-<h1>Riwayat Inventaris – {{ $label }}</h1>
-<div class="meta">
-    Lab: {{ $periode->lab->nama_lab }} &nbsp;|&nbsp;
-    Dicatat oleh: {{ $periode->dicatat_oleh ?? '-' }} &nbsp;|&nbsp;
-    Tanggal catat: {{ \Carbon\Carbon::parse($periode->tanggal_catat)->format('d-m-Y H:i') }}
-</div>
-
-<table style="width:auto;margin-bottom:24px">
-    <tr><th>Jumlah Kursi</th><td>{{ $periode->jumlah_kursi }}</td></tr>
-    <tr><th>Jumlah Meja</th><td>{{ $periode->jumlah_meja }}</td></tr>
-    <tr><th>Jumlah AC</th><td>{{ $periode->jumlah_ac }}</td></tr>
-    @if($periode->keterangan)<tr><th>Keterangan</th><td>{{ $periode->keterangan }}</td></tr>@endif
-</table>
-
-<h2>Kondisi AC</h2>
-@if($acRows->count() > 0)
-<table>
-    <thead><tr><th>Unit AC</th><th>Kondisi</th></tr></thead>
-    <tbody>
-        @foreach($acRows as $ac)
-        <tr><td>AC #{{ $ac->nomor_ac }}</td><td>{{ ucfirst($ac->kondisi) }}</td></tr>
-        @endforeach
-    </tbody>
-</table>
-@else
-<p style="color:#888;margin-bottom:16px">Tidak ada data AC.</p>
-@endif
-
-<h2>Kondisi Meja, Perangkat & Detail PC</h2>
-@if($mejaRows->count() > 0)
-<div class="table-scroll">
-    <table class="period-meja-table">
+    @php($months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'])@php($label=($months[$periode->bulan-1]??'Periode').' '.$periode->tahun)
+    <button class="print" onclick="window.print()">Cetak / Simpan PDF</button>
+    <h1>Snapshot Inventaris — {{ $label }}</h1>
+    <div class="meta">Lab: {{ $periode->lab->nama_lab }} · Dicatat: {{ $periode->dicatat_oleh ?? 'Admin' }} · {{ $periode->tanggal_catat ? \Carbon\Carbon::parse($periode->tanggal_catat)->format('d-m-Y H:i') : '—' }}</div>
+    @if($periode->keterangan)<p><strong>Catatan:</strong> {{ $periode->keterangan }}</p>@endif
+    <h2>Inventaris PC</h2>
+    <div class="scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>PC</th>
+                    <th>CPU</th>
+                    <th>Monitor</th>
+                    <th>Keyboard</th>
+                    <th>Mouse</th>
+                    <th>Windows</th>
+                    <th>Keterangan</th>
+                    <th>Spesifikasi</th>
+                </tr>
+            </thead>
+            <tbody>@forelse($periode->riwayatMeja->sortBy('nomor_meja') as $pc)<tr>
+                    <td>#{{ $pc->nomor_meja }}</td>@foreach(['cpu_status','monitor_status','keyboard_status','mouse_status','windows_status'] as $field)<td>{{ strtoupper(str_replace('_',' ',$pc->$field ?? 'normal')) }}</td>@endforeach<td>{{ $pc->keterangan ?: '—' }}</td>
+                    <td>{{ $pc->spesifikasi_pc ?: '—' }}</td>
+                </tr>@empty<tr>
+                    <td colspan="8">Tidak ada data PC.</td>
+                </tr>@endforelse</tbody>
+        </table>
+    </div>
+    <h2>Inventaris AC</h2>
+    <table>
         <thead>
             <tr>
-                <th>Meja</th>
-                <th>CPU</th>
-                <th>Keyboard</th>
-                <th>Mouse</th>
-                <th>Monitor</th>
-                <th>Kursi</th>
-                <th>Keterangan</th>
-                <th>Spesifikasi PC</th>
+                <th>AC</th>
+                <th>Kondisi</th>
             </tr>
         </thead>
-        <tbody>
-            @foreach($mejaRows as $m)
-            <tr>
-                <td>#{{ $m->nomor_meja }}</td>
-                <td class="condition-cell">{{ $conditionLabels[$m->cpu_kondisi] ?? ucfirst(str_replace('_', ' ', $m->cpu_kondisi ?? '-')) }}</td>
-                <td class="condition-cell">{{ $conditionLabels[$m->keyboard_kondisi] ?? ucfirst(str_replace('_', ' ', $m->keyboard_kondisi ?? '-')) }}</td>
-                <td class="condition-cell">{{ $conditionLabels[$m->mouse_kondisi] ?? ucfirst(str_replace('_', ' ', $m->mouse_kondisi ?? '-')) }}</td>
-                <td class="condition-cell">{{ $conditionLabels[$m->monitor_kondisi] ?? ucfirst(str_replace('_', ' ', $m->monitor_kondisi ?? '-')) }}</td>
-                <td class="condition-cell">{{ $conditionLabels[$m->kursi_kondisi] ?? ucfirst(str_replace('_', ' ', $m->kursi_kondisi ?? '-')) }}</td>
-                <td class="text-cell">{{ $m->keterangan ?: 'Tidak ada keterangan.' }}</td>
-                <td class="text-cell">{{ $m->spesifikasi_pc ?: 'Belum ada spesifikasi PC.' }}</td>
-            </tr>
-            @endforeach
-        </tbody>
+        <tbody>@forelse($periode->riwayatAc->sortBy('nomor_ac') as $ac)<tr>
+                <td>AC #{{ $ac->nomor_ac }}</td>
+                <td>{{ strtoupper($ac->kondisi) }}</td>
+            </tr>@empty<tr>
+                <td colspan="2">Tidak ada data AC.</td>
+            </tr>@endforelse</tbody>
     </table>
-</div>
-@else
-<p style="color:#888">Tidak ada data meja.</p>
-@endif
+    <h2>Inventaris Tambahan</h2>
+    <div class="scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>Kategori</th>
+                    <th>Barang</th>
+                    <th>Total</th>
+                    <th>Rusak</th>
+                    <th>Baik</th>
+                    <th>Kondisi</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>@forelse($periode->riwayatTambahan->sortBy('kategori')->sortBy('nama_barang') as $item)<tr>
+                    <td>{{ $item->kategori }}</td>
+                    <td>{{ $item->nama_barang }}</td>
+                    <td>{{ $item->jumlah_total }}</td>
+                    <td>{{ $item->jumlah_rusak }}</td>
+                    <td>{{ max(0,$item->jumlah_total-$item->jumlah_rusak) }}</td>
+                    <td>{{ strtoupper(str_replace('_',' ',$item->kondisi)) }}</td>
+                    <td>{{ $item->keterangan ?: '—' }}</td>
+                </tr>@empty<tr>
+                    <td colspan="7">Tidak ada inventaris tambahan.</td>
+                </tr>@endforelse</tbody>
+        </table>
+    </div>
 </body>
+
 </html>

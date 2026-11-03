@@ -41,4 +41,9 @@ class PeriodeInventaris extends Model
     {
         return $this->hasMany(RiwayatMeja::class, 'id_periode', 'id_periode');
     }
+
+    public function riwayatTambahan()
+    {
+        return $this->hasMany(RiwayatTambahan::class, 'id_periode', 'id_periode');
+    }
 }
