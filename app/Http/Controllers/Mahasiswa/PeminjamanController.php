@@ -128,7 +128,7 @@ class PeminjamanController extends Controller
         $lab = DataLab::where('nama_lab', $request->nama_lab)->first();
 
         if (!$lab) {
-            return response()->json(['total_kursi' => 0, 'taken' => []]);
+            return response()->json(['total_kursi' => 0, 'taken' => [], 'unavailable' => []]);
         }
 
         $endDate = $request->input('tanggal_selesai') ?: $request->tanggal;
@@ -141,18 +141,21 @@ class PeminjamanController extends Controller
             return response()->json(['message' => 'Waktu akhir harus setelah waktu mulai.'], 422);
         }
 
+        $totalSeats = (int) $lab->jumlah_kursi;
         $taken = LabReservationAvailability::takenSeats(
             $request->nama_lab,
             $request->tanggal,
             $request->jam_mulai,
             $endDate,
             $request->jam_selesai,
-            (int) $lab->jumlah_kursi,
+            $totalSeats,
         );
+        $unavailable = LabReservationAvailability::unavailableSeats($request->nama_lab, $totalSeats);
 
         return response()->json([
-            'total_kursi' => (int) $lab->jumlah_kursi,
-            'taken'       => $taken,
+            'total_kursi' => $totalSeats,
+            'taken' => $taken,
+            'unavailable' => $unavailable,
         ]);
     }
 

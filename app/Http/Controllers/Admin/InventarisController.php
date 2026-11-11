@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DataLab;
+use App\Models\DataPinjam;
 use App\Models\InventarisAc;
 use App\Models\InventarisMeja;
 use App\Models\InventarisTambahan;
@@ -33,7 +34,7 @@ class InventarisController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:ac,meja,pc_status,tambahan,lab',
+            'type' => 'required|in:ac,meja,pc_status,tambahan',
             'id' => 'required|integer',
             'field' => 'required|string',
             'value' => 'nullable',
@@ -78,10 +79,6 @@ class InventarisController extends Controller
             } else {
                 abort(422, 'Field inventaris tambahan tidak valid.');
             }
-        } elseif ($request->type === 'lab') {
-            $lab = DataLab::findOrFail($request->id);
-            abort_unless($request->field === 'jumlah_kursi' && is_numeric($request->value) && (int) $request->value >= 0, 422, 'Jumlah kursi tidak valid.');
-            $lab->update(['jumlah_kursi' => (int) $request->value]);
         }
 
         return response()->json(['success' => true]);
@@ -104,29 +101,43 @@ class InventarisController extends Controller
 
     public function storePc($id_lab)
     {
-        DataLab::findOrFail($id_lab);
-        $nextNumber = (int) InventarisMeja::where('id_lab', $id_lab)->max('nomor_meja') + 1;
-        InventarisMeja::create([
-            'id_lab' => $id_lab,
-            'nomor_meja' => $nextNumber,
-            'cpu_kondisi' => 'normal',
-            'keyboard_kondisi' => 'normal',
-            'mouse_kondisi' => 'normal',
-            'monitor_kondisi' => 'normal',
-            'kursi_kondisi' => 'normal',
-            'cpu_status' => 'normal',
-            'monitor_status' => 'normal',
-            'keyboard_status' => 'normal',
-            'mouse_status' => 'normal',
-            'windows_status' => 'normal',
-        ]);
-        return redirect()->route('admin.inventaris.index', $id_lab)->with('success', "PC #{$nextNumber} berhasil ditambahkan.");
+        $lab = DataLab::findOrFail($id_lab);
+        $nextNumber = DB::transaction(function () use ($id_lab, $lab) {
+            $number = (int) InventarisMeja::where('id_lab', $id_lab)->max('nomor_meja') + 1;
+            InventarisMeja::create([
+                'id_lab' => $id_lab,
+                'nomor_meja' => $number,
+                'cpu_kondisi' => 'normal', 'keyboard_kondisi' => 'normal',
+                'mouse_kondisi' => 'normal', 'monitor_kondisi' => 'normal', 'kursi_kondisi' => 'normal',
+                'cpu_status' => 'normal', 'monitor_status' => 'normal',
+                'keyboard_status' => 'normal', 'mouse_status' => 'normal', 'windows_status' => 'normal',
+            ]);
+            $rows = InventarisMeja::where('id_lab', $id_lab)->get(['nomor_meja']);
+            $lab->update(['jumlah_meja' => $rows->count(), 'jumlah_kursi' => (int) $rows->max('nomor_meja')]);
+            return $number;
+        });
+        return redirect()->route('admin.inventaris.index', $id_lab)->with('success', "PC #{$nextNumber} berhasil ditambahkan. Kapasitas peminjaman ikut diperbarui.");
     }
 
     public function hapusPc($id_lab, $id_meja)
     {
-        InventarisMeja::where('id_lab', $id_lab)->findOrFail($id_meja)->delete();
-        return redirect()->route('admin.inventaris.index', $id_lab)->with('success', 'Unit PC berhasil dihapus.');
+        $lab = DataLab::findOrFail($id_lab);
+        $pc = InventarisMeja::where('id_lab', $id_lab)->findOrFail($id_meja);
+        $isReserved = DataPinjam::where('nama_lab', $lab->nama_lab)
+            ->where('jenis', 'lab')
+            ->whereIn('status', ['menunggu', 'disetujui'])
+            ->where('kursi', $pc->nomor_meja)
+            ->exists();
+        if ($isReserved) {
+            return redirect()->route('admin.inventaris.index', $id_lab)->with('error', 'PC tidak dapat dihapus karena masih dipakai pada peminjaman aktif.');
+        }
+
+        DB::transaction(function () use ($pc, $lab, $id_lab) {
+            $pc->delete();
+            $rows = InventarisMeja::where('id_lab', $id_lab)->get(['nomor_meja']);
+            $lab->update(['jumlah_meja' => $rows->count(), 'jumlah_kursi' => (int) ($rows->max('nomor_meja') ?? 0)]);
+        });
+        return redirect()->route('admin.inventaris.index', $id_lab)->with('success', 'Unit PC berhasil dihapus dan kapasitas peminjaman disinkronkan.');
     }
 
     public function hapusTambahan($id_lab, $id_item)

@@ -2,17 +2,17 @@
 
 namespace App\Services;
 
+use App\Models\DataLab;
 use App\Models\DataPinjam;
+use App\Models\InventarisMeja;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 final class LabReservationAvailability
 {
     /**
-     * Get booked seats for a lab and a date-time interval.
-     *
-     * A whole-lab reservation (or a legacy lab reservation without a seat)
-     * blocks every seat for the overlapping interval.
+     * Get occupied seats for a lab and date/time interval.
+     * Reservations covering the whole lab block every numbered seat.
      */
     public static function takenSeats(
         string $labName,
@@ -22,13 +22,8 @@ final class LabReservationAvailability
         string $endTime,
         int $totalSeats,
     ): array {
-        $reservations = self::overlappingReservations(
-            $labName,
-            $startDate,
-            $startTime,
-            $endDate,
-            $endTime,
-        )->get(['kursi', 'seluruh_lab']);
+        $reservations = self::overlappingReservations($labName, $startDate, $startTime, $endDate, $endTime)
+            ->get(['kursi', 'seluruh_lab']);
 
         $wholeLabBlocked = $reservations->contains(
             fn (DataPinjam $reservation) => (bool) $reservation->seluruh_lab || $reservation->kursi === null
@@ -46,9 +41,34 @@ final class LabReservationAvailability
             ->all();
     }
 
-    /**
-     * Check whether a requested seat or whole-lab reservation is available.
-     */
+    /** Return missing or faulty PC seat numbers for display in the seat picker. */
+    public static function unavailableSeats(string $labName, int $totalSeats): array
+    {
+        if ($totalSeats <= 0) {
+            return [];
+        }
+
+        $lab = DataLab::where('nama_lab', $labName)->first();
+        if (!$lab) {
+            return range(1, $totalSeats);
+        }
+
+        $pcs = InventarisMeja::where('id_lab', $lab->id_lab)
+            ->whereBetween('nomor_meja', [1, $totalSeats])
+            ->get(array_merge(['nomor_meja'], self::conditionFields()));
+
+        $usableSeatNumbers = [];
+        foreach ($pcs as $pc) {
+            if (self::hasOnlyNormalConditions($pc)) {
+                $usableSeatNumbers[] = (int) $pc->nomor_meja;
+            }
+        }
+
+        // A seat with no linked workstation row is not a bookable PC seat.
+        return array_values(array_diff(range(1, $totalSeats), $usableSeatNumbers));
+    }
+
+    /** Check whether a seat or whole-lab reservation is available. */
     public static function isAvailable(
         string $labName,
         string $startDate,
@@ -69,7 +89,7 @@ final class LabReservationAvailability
             return !$query->exists();
         }
 
-        if ($seat === null) {
+        if ($seat === null || !self::isSeatOperational($labName, $seat)) {
             return false;
         }
 
@@ -78,6 +98,38 @@ final class LabReservationAvailability
                 ->orWhereNull('kursi')
                 ->orWhere('kursi', $seat);
         })->exists();
+    }
+
+    private static function isSeatOperational(string $labName, int $seat): bool
+    {
+        $lab = DataLab::where('nama_lab', $labName)->first();
+        if (!$lab) {
+            return false;
+        }
+
+        $pc = InventarisMeja::where('id_lab', $lab->id_lab)
+            ->where('nomor_meja', $seat)
+            ->first(array_merge(['nomor_meja'], self::conditionFields()));
+
+        return $pc !== null && self::hasOnlyNormalConditions($pc);
+    }
+
+    private static function conditionFields(): array
+    {
+        return [
+            'cpu_status', 'monitor_status', 'keyboard_status', 'mouse_status', 'windows_status',
+            'cpu_kondisi', 'monitor_kondisi', 'keyboard_kondisi', 'mouse_kondisi', 'kursi_kondisi',
+        ];
+    }
+
+    private static function hasOnlyNormalConditions(InventarisMeja $pc): bool
+    {
+        foreach (self::conditionFields() as $field) {
+            if (($pc->{$field} ?? null) !== 'normal') {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static function overlappingReservations(

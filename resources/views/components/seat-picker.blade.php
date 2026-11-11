@@ -164,6 +164,13 @@
     cursor: not-allowed;
 }
 
+.sp-seat--unavailable {
+    background: #FFF7ED;
+    border-color: #FDBA74;
+    color: #C2410C;
+    cursor: not-allowed;
+}
+
 .sp-seat--taken::after {
     content: '';
     position: absolute;
@@ -208,6 +215,7 @@
 
 .sp-legend-dot--available { background: var(--surface,#fff); }
 .sp-legend-dot--taken     { background: #F3F4F6; border-color: #E5E7EB; }
+.sp-legend-dot--unavailable { background: #FFF7ED; border-color: #FDBA74; }
 .sp-legend-dot--selected  { background: var(--blue,#2563EB); border-color: var(--blue,#2563EB); }
 
 /* ── SELECTED INFO ── */
@@ -308,6 +316,10 @@
             <span>Sudah dipesan</span>
         </div>
         <div class="sp-legend-item">
+            <div class="sp-legend-dot sp-legend-dot--unavailable"></div>
+            <span>PC bermasalah / tidak terdata</span>
+        </div>
+        <div class="sp-legend-item">
             <div class="sp-legend-dot sp-legend-dot--selected"></div>
             <span>Pilihan Anda</span>
         </div>
@@ -366,6 +378,7 @@
 
     var currentTotal    = 0;
     var currentTaken    = [];
+    var currentUnavailable = [];
     var selectedSeat    = null;
     var lastFetchParams = {};
 
@@ -376,13 +389,17 @@
         return row * SEATS_PER_ROW + seatInRow;
     }
 
-    function renderGrid(totalSeats, takenSeats) {
+    function renderGrid(totalSeats, takenSeats, unavailableSeats) {
+        unavailableSeats = unavailableSeats || [];
         currentTotal = totalSeats;
         currentTaken = takenSeats;
+        currentUnavailable = unavailableSeats;
 
         var rows      = Math.ceil(totalSeats / SEATS_PER_ROW);
         var taken     = {};
+        var unavailable = {};
         for (var i = 0; i < takenSeats.length; i++) { taken[+takenSeats[i]] = true; }
+        for (var j = 0; j < unavailableSeats.length; j++) { unavailable[+unavailableSeats[j]] = true; }
 
         var container = document.getElementById('spGridContainer');
 
@@ -429,6 +446,10 @@
                         seat.classList.add('sp-seat--taken');
                         seat.textContent = num;
                         seat.title = 'Meja ' + num + ' — sudah dipesan';
+                    } else if (unavailable[num]) {
+                        seat.classList.add('sp-seat--unavailable');
+                        seat.textContent = num;
+                        seat.title = 'Meja ' + num + ' — PC bermasalah atau belum terdata';
                     } else {
                         seat.textContent = num;
                         seat.title = 'Meja ' + num + ' — tersedia';
@@ -459,7 +480,7 @@
     function selectSeat(num) {
         selectedSeat = (selectedSeat === num) ? null : num;
         document.getElementById('spKursiInput').value = selectedSeat || '';
-        renderGrid(currentTotal, currentTaken);
+        renderGrid(currentTotal, currentTaken, currentUnavailable);
     }
 
     function refreshSelectedInfo() {
@@ -477,7 +498,7 @@
         e.preventDefault();
         selectedSeat = null;
         document.getElementById('spKursiInput').value = '';
-        renderGrid(currentTotal, currentTaken);
+        renderGrid(currentTotal, currentTaken, currentUnavailable);
     });
 
     /* ── FETCH SEAT AVAILABILITY ─────────────────────────────────── */
@@ -508,7 +529,7 @@
         fetch(url.toString())
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                renderGrid(data.total_kursi || 0, data.taken || []);
+                renderGrid(data.total_kursi || 0, data.taken || [], data.unavailable || []);
             })
             .catch(function () {
                 container.innerHTML = '<p style="color:#DC2626;font-size:13px;padding:16px 0">Gagal memuat data kursi. Periksa koneksi dan coba lagi.</p>';
