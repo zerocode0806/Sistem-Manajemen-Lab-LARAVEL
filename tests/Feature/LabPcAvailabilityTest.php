@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Admin;
 use App\Models\DataLab;
+use App\Models\DataPinjam;
 use App\Models\InventarisMeja;
 use App\Services\LabReservationAvailability;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -50,6 +51,21 @@ class LabPcAvailabilityTest extends TestCase
             'email' => 'lab-pc-test@example.test',
             'username' => 'lab-pc-test',
             'password' => 'not-used-in-test',
+        ]);
+    }
+
+    private function createActiveBooking(DataLab $lab, ?int $seat = 1): DataPinjam
+    {
+        return DataPinjam::create([
+            'nim' => null,
+            'jenis' => 'lab',
+            'tanggal' => '2026-11-12',
+            'jam_mulai' => '09:00:00',
+            'jam_selesai' => '10:00:00',
+            'nama_lab' => $lab->nama_lab,
+            'kursi' => $seat,
+            'seluruh_lab' => $seat === null,
+            'status' => 'disetujui',
         ]);
     }
 
@@ -105,5 +121,44 @@ class LabPcAvailabilityTest extends TestCase
         $this->assertFalse(LabReservationAvailability::isAvailable($lab->nama_lab, '2026-11-11', '09:00', '2026-11-11', '10:00', 2, false));
         $this->assertFalse(LabReservationAvailability::isAvailable($lab->nama_lab, '2026-11-11', '09:00', '2026-11-11', '10:00', 3, false));
         $this->assertFalse(LabReservationAvailability::isAvailable($lab->nama_lab, '2026-11-11', '09:00', '2026-11-11', '10:00', 4, false));
+    }
+
+    public function test_reserved_pc_cannot_be_marked_faulty_in_inventory(): void
+    {
+        $this->withExceptionHandling();
+        $lab = $this->createLab('Lab Booking Aktif', 1);
+        $pc = $this->createPc($lab, 1);
+        $this->createActiveBooking($lab, 1);
+        $this->actingAs($this->admin(), 'admin');
+        $this->withSession(['_token' => 'test-token']);
+
+        $this->postJson(route('admin.inventaris.update'), [
+            '_token' => 'test-token',
+            'type' => 'pc_status',
+            'id' => $pc->id_meja,
+            'field' => 'cpu_status',
+            'value' => 'trouble',
+        ])->assertStatus(422)->assertJsonPath('message', "Kondisi PC #1 tidak dapat diubah menjadi kondisi bermasalah karena masih digunakan pada peminjaman aktif.");
+
+        $this->assertDatabaseHas('inventaris_meja', [
+            'id_meja' => $pc->id_meja,
+            'cpu_status' => 'normal',
+        ]);
+    }
+
+    public function test_lab_cannot_be_deleted_while_an_approved_booking_exists(): void
+    {
+        $lab = $this->createLab('Lab Jangan Hapus', 1);
+        $this->createPc($lab, 1);
+        $this->createActiveBooking($lab, 1);
+        $this->actingAs($this->admin(), 'admin');
+        $this->withSession(['_token' => 'test-token']);
+
+        $this->delete(route('admin.lab.destroy', $lab->id_lab), ['_token' => 'test-token'])
+            ->assertRedirect(route('admin.lab.index'))
+            ->assertSessionHas('error', 'Lab tidak dapat dihapus karena masih memiliki peminjaman berstatus menunggu atau disetujui.');
+
+        $this->assertDatabaseHas('data_lab', ['id_lab' => $lab->id_lab, 'nama_lab' => 'Lab Jangan Hapus']);
+        $this->assertDatabaseHas('data_pinjam', ['nama_lab' => 'Lab Jangan Hapus', 'status' => 'disetujui']);
     }
 }

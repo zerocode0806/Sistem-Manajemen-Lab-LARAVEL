@@ -10,6 +10,9 @@
     <a href="{{ route('admin.lab.create') }}" class="btn-primary"><i class="bi bi-plus"></i> Tambah Lab</a>
 </div>
 
+@if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
+@if(session('error'))<div class="alert alert-danger" role="alert">{{ session('error') }}</div>@endif
+
 <div class="toolbar">
     <div class="search-wrap">
         <i class="bi bi-search"></i>
@@ -25,9 +28,9 @@
                 <th>#</th>
                 <th>Nama Lab</th>
                 <th>Lokasi</th>
-                <th>Stok</th>
-                <th>Kursi</th>
-                <th>Meja</th>
+                <th>Kapasitas ruangan (orang)</th>
+                <th>Kursi booking</th>
+                <th>PC / meja</th>
                 <th>Status</th>
                 <th>Aksi</th>
             </tr>

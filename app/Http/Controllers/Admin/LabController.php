@@ -81,7 +81,25 @@ class LabController extends Controller
 
     public function destroy(DataLab $lab)
     {
-        $lab->delete();
+        $hasActiveBooking = DB::transaction(function () use ($lab) {
+            $lockedLab = DataLab::whereKey($lab->getKey())->lockForUpdate()->firstOrFail();
+            $hasActiveBooking = DataPinjam::where('nama_lab', $lockedLab->nama_lab)
+                ->where('jenis', 'lab')
+                ->whereIn('status', ['menunggu', 'disetujui'])
+                ->lockForUpdate()
+                ->exists();
+
+            if (!$hasActiveBooking) {
+                $lockedLab->delete();
+            }
+
+            return $hasActiveBooking;
+        });
+
+        if ($hasActiveBooking) {
+            return redirect()->route('admin.lab.index')->with('error', 'Lab tidak dapat dihapus karena masih memiliki peminjaman berstatus menunggu atau disetujui.');
+        }
+
         return redirect()->route('admin.lab.index')->with('success', 'Data lab berhasil dihapus.');
     }
 

@@ -49,7 +49,17 @@ class InventarisController extends Controller
             $conditionFields = ['cpu_kondisi' => ['normal', 'rusak', 'instal_ulang'], 'keyboard_kondisi' => ['normal', 'rusak', 'tidak_ada'], 'mouse_kondisi' => ['normal', 'rusak', 'tidak_ada'], 'monitor_kondisi' => ['normal', 'rusak', 'tidak_ada'], 'kursi_kondisi' => ['normal', 'rusak', 'tidak_ada']];
             if (isset($conditionFields[$request->field])) {
                 abort_unless(in_array($request->value, $conditionFields[$request->field], true), 422, 'Kondisi tidak valid.');
-                $meja->update([$request->field => $request->value]);
+                $blockMessage = DB::transaction(function () use ($meja, $request) {
+                    $blockMessage = $this->activeBookingBlockMessage($meja, $request->value);
+                    if ($blockMessage !== null) {
+                        return $blockMessage;
+                    }
+                    $meja->update([$request->field => $request->value]);
+                    return null;
+                });
+                if ($blockMessage !== null) {
+                    return response()->json(['success' => false, 'message' => $blockMessage], 422);
+                }
             } elseif (in_array($request->field, ['keterangan', 'spesifikasi_pc'], true)) {
                 abort_if($request->value !== null && mb_strlen((string) $request->value) > 20000, 422, 'Isi terlalu panjang.');
                 $meja->update([$request->field => $request->value]);
@@ -61,7 +71,17 @@ class InventarisController extends Controller
             $fields = ['cpu_status', 'monitor_status', 'keyboard_status', 'mouse_status', 'windows_status'];
             $allowed = ['normal', 'trouble', 'hilang', 'aktivasi_ulang', 'instal_ulang'];
             abort_unless(in_array($request->field, $fields, true) && in_array($request->value, $allowed, true), 422, 'Status inventaris PC tidak valid.');
-            $pc->update([$request->field => $request->value]);
+            $blockMessage = DB::transaction(function () use ($pc, $request) {
+                $blockMessage = $this->activeBookingBlockMessage($pc, $request->value);
+                if ($blockMessage !== null) {
+                    return $blockMessage;
+                }
+                $pc->update([$request->field => $request->value]);
+                return null;
+            });
+            if ($blockMessage !== null) {
+                return response()->json(['success' => false, 'message' => $blockMessage], 422);
+            }
         } elseif ($request->type === 'tambahan') {
             $item = InventarisTambahan::findOrFail($request->id);
             if ($request->field === 'jumlah_total' || $request->field === 'jumlah_rusak') {
@@ -82,6 +102,34 @@ class InventarisController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    /** Prevent a reserved PC from being marked unavailable while its booking is active. */
+    private function activeBookingBlockMessage(InventarisMeja $pc, string $newValue): ?string
+    {
+        if ($newValue === 'normal') {
+            return null;
+        }
+
+        $lab = DataLab::find($pc->id_lab);
+        if (!$lab) {
+            return null;
+        }
+
+        $hasActiveBooking = DataPinjam::where('nama_lab', $lab->nama_lab)
+            ->where('jenis', 'lab')
+            ->whereIn('status', ['menunggu', 'disetujui'])
+            ->where(function ($query) use ($pc) {
+                $query->where('kursi', $pc->nomor_meja)
+                    ->orWhereNull('kursi')
+                    ->orWhere('seluruh_lab', true);
+            })
+            ->lockForUpdate()
+            ->exists();
+
+        return $hasActiveBooking
+            ? "Kondisi PC #{$pc->nomor_meja} tidak dapat diubah menjadi kondisi bermasalah karena masih digunakan pada peminjaman aktif."
+            : null;
     }
 
     public function storeTambahan(Request $request, $id_lab)
