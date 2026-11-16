@@ -52,7 +52,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
         </div>
     </div>
     <div class="login-header">
-        <h1>Masuk sebagai Ubed</h1>
+        <h1>Masuk sebagai Admin</h1>
         <p>Masukkan username dan password Anda</p>
     </div>
     <div class="card">
