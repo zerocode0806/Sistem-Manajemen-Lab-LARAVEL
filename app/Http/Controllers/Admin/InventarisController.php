@@ -210,10 +210,11 @@ class InventarisController extends Controller
         return redirect()->route('admin.inventaris.index', $id_lab)->with('success', 'AC berhasil dihapus.');
     }
 
-    /** Save/replace this lab's monthly snapshot from the main inventory page. */
+    /** Save/replace this lab's weekly snapshot from the main inventory page. */
     public function simpanPeriode(Request $request, $id_lab)
     {
         $data = $request->validate([
+            'minggu' => 'required|integer|min:1|max:4',
             'bulan' => 'required|integer|min:1|max:12',
             'tahun' => 'required|integer|min:2020|max:2099',
             'keterangan' => 'nullable|string|max:255',
@@ -224,7 +225,7 @@ class InventarisController extends Controller
             $mejaRows = InventarisMeja::where('id_lab', $id_lab)->orderBy('nomor_meja')->get();
             $extraRows = InventarisTambahan::where('id_lab', $id_lab)->orderBy('id_item')->get();
             $periode = PeriodeInventaris::updateOrCreate(
-                ['id_lab' => $id_lab, 'bulan' => $data['bulan'], 'tahun' => $data['tahun']],
+                ['id_lab' => $id_lab, 'tahun' => $data['tahun'], 'bulan' => $data['bulan'], 'minggu' => $data['minggu']],
                 ['jumlah_kursi' => $lab->jumlah_kursi, 'jumlah_meja' => $mejaRows->count(), 'jumlah_ac' => $acRows->count(), 'tanggal_catat' => now(), 'dicatat_oleh' => Auth::guard('admin')->user()->nama ?? 'Admin', 'keterangan' => $data['keterangan'] ?? null]
             );
             $periode->riwayatAc()->delete();
@@ -245,13 +246,14 @@ class InventarisController extends Controller
                 'kondisi' => $item->kondisi, 'keterangan' => $item->keterangan,
             ]);
         });
-        return redirect()->route('admin.inventaris.riwayat', $id_lab)->with('success', 'Snapshot inventaris berhasil disimpan untuk periode yang dipilih.');
+        return redirect()->route('admin.inventaris.riwayat', $id_lab)->with('success', "Snapshot inventaris berhasil disimpan untuk Minggu {$data['minggu']}.");
     }
 
     public function riwayat($id_lab)
     {
         $lab = DataLab::findOrFail($id_lab);
-        $periode = PeriodeInventaris::where('id_lab', $id_lab)->orderByDesc('tahun')->orderByDesc('bulan')->get();
+        $periode = PeriodeInventaris::where('id_lab', $id_lab)
+            ->orderByDesc('tahun')->orderByDesc('bulan')->orderByDesc('minggu')->get();
         return view('admin.inventaris.riwayat', compact('lab', 'periode'));
     }
 

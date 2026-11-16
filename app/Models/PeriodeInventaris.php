@@ -18,6 +18,7 @@ class PeriodeInventaris extends Model
     protected $fillable = [
         'id_lab',
         'bulan',
+        'minggu',
         'tahun',
         'jumlah_kursi',
         'jumlah_meja',

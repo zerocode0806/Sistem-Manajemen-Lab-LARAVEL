@@ -3,7 +3,7 @@
 @section('content')
 @php
 $monthNames=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-$label=($monthNames[$periode->bulan-1]??'Periode').' '.$periode->tahun;
+$label='Minggu '.($periode->minggu ?? 1).' · '.($monthNames[$periode->bulan-1]??'Periode').' '.$periode->tahun;
 $pcStatuses=['normal'=>'NORMAL','trouble'=>'TROUBLE','hilang'=>'HILANG','aktivasi_ulang'=>'AKTIVASI ULANG','instal_ulang'=>'INSTAL ULANG'];
 $assetStatuses=['normal'=>'NORMAL','rusak'=>'RUSAK','hilang'=>'HILANG','kurang_lengkap'=>'KURANG LENGKAP'];
 @endphp
