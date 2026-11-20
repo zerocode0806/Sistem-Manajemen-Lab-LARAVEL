@@ -4,15 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class InventarisMeja extends Model
 {
     use HasFactory;
 
     protected $table = 'inventaris_meja';
+
     protected $primaryKey = 'id_meja';
+
     public $incrementing = true;
+
     protected $keyType = 'int';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -31,6 +36,15 @@ class InventarisMeja extends Model
         'mouse_status',
         'windows_status',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $pc): void {
+            if (blank($pc->qr_token)) {
+                $pc->qr_token = (string) Str::uuid();
+            }
+        });
+    }
 
     public function lab()
     {

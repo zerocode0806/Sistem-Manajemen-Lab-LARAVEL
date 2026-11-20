@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class InventarisMejaSeeder extends Seeder
 {
@@ -13,6 +15,8 @@ class InventarisMejaSeeder extends Seeder
      */
     public function run(): void
     {
+        $hasQrToken = Schema::hasColumn('inventaris_meja', 'qr_token');
+
         foreach (DB::table('data_lab')->orderBy('id_lab')->get(['id_lab', 'jumlah_meja']) as $lab) {
             $numbers = DB::table('inventaris_meja')
                 ->where('id_lab', $lab->id_lab)
@@ -27,7 +31,7 @@ class InventarisMejaSeeder extends Seeder
                     continue;
                 }
 
-                DB::table('inventaris_meja')->insertOrIgnore([
+                $pc = [
                     'id_lab' => $lab->id_lab,
                     'nomor_meja' => $number,
                     'cpu_kondisi' => 'normal',
@@ -42,7 +46,12 @@ class InventarisMejaSeeder extends Seeder
                     'windows_status' => 'normal',
                     'created_at' => $now,
                     'updated_at' => $now,
-                ]);
+                ];
+                if ($hasQrToken) {
+                    $pc['qr_token'] = (string) Str::uuid();
+                }
+
+                DB::table('inventaris_meja')->insertOrIgnore($pc);
             }
         }
     }

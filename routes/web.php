@@ -1,18 +1,19 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\AkunController as AdminAkunController;
+use App\Http\Controllers\Admin\BarangController as AdminBarangController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\InventarisController as AdminInventarisController;
+use App\Http\Controllers\Admin\LabController as AdminLabController;
+use App\Http\Controllers\Admin\MahasiswaController as AdminMahasiswaController;
+use App\Http\Controllers\Admin\PeminjamanController as AdminPeminjamanController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\Mahasiswa\DashboardController as MahasiswaDashboardController;
+use App\Http\Controllers\Mahasiswa\PeminjamanController as MahasiswaPeminjamanController;
+use App\Http\Controllers\Mahasiswa\ProfileController as MahasiswaProfileController;
 use App\Http\Controllers\MahasiswaAuthController;
-use App\Http\Controllers\Admin\DashboardController       as AdminDashboardController;
-use App\Http\Controllers\Admin\LabController             as AdminLabController;
-use App\Http\Controllers\Admin\BarangController          as AdminBarangController;
-use App\Http\Controllers\Admin\MahasiswaController       as AdminMahasiswaController;
-use App\Http\Controllers\Admin\PeminjamanController      as AdminPeminjamanController;
-use App\Http\Controllers\Admin\InventarisController      as AdminInventarisController;
-use App\Http\Controllers\Admin\AkunController            as AdminAkunController;
-use App\Http\Controllers\Mahasiswa\DashboardController   as MahasiswaDashboardController;
-use App\Http\Controllers\Mahasiswa\PeminjamanController  as MahasiswaPeminjamanController;
-use App\Http\Controllers\Mahasiswa\ProfileController     as MahasiswaProfileController;
+use App\Http\Controllers\PublicInventarisPcController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,14 +24,20 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+// Halaman publik PC hanya dapat diakses dengan token acak yang tidak berurutan.
+Route::get('/inventaris-publik/pc/{token}/qr.svg', [PublicInventarisPcController::class, 'qr'])
+    ->name('public.inventaris.pc.qr');
+Route::get('/inventaris-publik/pc/{token}', [PublicInventarisPcController::class, 'show'])
+    ->name('public.inventaris.pc.show');
+
 /*
 |--------------------------------------------------------------------------
 | Admin Auth Routes
 |--------------------------------------------------------------------------
 */
-Route::get('/admin/login',     [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login',    [AdminAuthController::class, 'login'])->name('admin.login.submit');
-Route::get('/admin/register',  [AdminAuthController::class, 'showRegisterForm'])->name('admin.register');
+Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
+Route::get('/admin/register', [AdminAuthController::class, 'showRegisterForm'])->name('admin.register');
 Route::post('/admin/register', [AdminAuthController::class, 'register'])->name('admin.register.submit');
 
 /*
@@ -38,7 +45,7 @@ Route::post('/admin/register', [AdminAuthController::class, 'register'])->name('
 | Mahasiswa Auth Routes
 |--------------------------------------------------------------------------
 */
-Route::get('/mahasiswa/login',  [MahasiswaAuthController::class, 'showLoginForm'])->name('mahasiswa.login');
+Route::get('/mahasiswa/login', [MahasiswaAuthController::class, 'showLoginForm'])->name('mahasiswa.login');
 Route::post('/mahasiswa/login', [MahasiswaAuthController::class, 'login'])->name('mahasiswa.login.submit');
 
 /*
@@ -49,9 +56,9 @@ Route::post('/mahasiswa/login', [MahasiswaAuthController::class, 'login'])->name
 Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
 
     // Dashboard
-    Route::get('/dashboard',         [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/refresh', [AdminDashboardController::class, 'refresh'])->name('dashboard.refresh');
-    Route::post('/logout',           [AdminAuthController::class, 'logout'])->name('logout');
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
     // Lab
     Route::resource('lab', AdminLabController::class);
@@ -63,45 +70,45 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::resource('mahasiswa', AdminMahasiswaController::class);
 
     // Peminjaman – seat check must be BEFORE the wildcard {peminjaman} route
-    Route::get('peminjaman/check-seats',              [AdminPeminjamanController::class, 'checkSeats'])->name('peminjaman.checkSeats');
-    Route::get('peminjaman',                          [AdminPeminjamanController::class, 'index'])->name('peminjaman.index');
-    Route::get('peminjaman/create',                   [AdminPeminjamanController::class, 'create'])->name('peminjaman.create');
-    Route::post('peminjaman',                         [AdminPeminjamanController::class, 'store'])->name('peminjaman.store');
+    Route::get('peminjaman/check-seats', [AdminPeminjamanController::class, 'checkSeats'])->name('peminjaman.checkSeats');
+    Route::get('peminjaman', [AdminPeminjamanController::class, 'index'])->name('peminjaman.index');
+    Route::get('peminjaman/create', [AdminPeminjamanController::class, 'create'])->name('peminjaman.create');
+    Route::post('peminjaman', [AdminPeminjamanController::class, 'store'])->name('peminjaman.store');
     Route::get('peminjaman/eksternal-individu/create', [AdminPeminjamanController::class, 'createExternalIndividual'])->name('peminjaman.externalIndividual.create');
-    Route::post('peminjaman/eksternal-individu',       [AdminPeminjamanController::class, 'storeExternalIndividual'])->name('peminjaman.externalIndividual.store');
+    Route::post('peminjaman/eksternal-individu', [AdminPeminjamanController::class, 'storeExternalIndividual'])->name('peminjaman.externalIndividual.store');
     Route::get('peminjaman/eksternal-instansi/create', [AdminPeminjamanController::class, 'createExternalInstitution'])->name('peminjaman.externalInstitution.create');
-    Route::post('peminjaman/eksternal-instansi',       [AdminPeminjamanController::class, 'storeExternalInstitution'])->name('peminjaman.externalInstitution.store');
-    Route::get('peminjaman-riwayat',                  [AdminPeminjamanController::class, 'riwayat'])->name('peminjaman.riwayat');
-    Route::get('peminjaman-arsip',                    [AdminPeminjamanController::class, 'arsip'])->name('peminjaman.arsip');
-    Route::get('peminjaman/{peminjaman}',             [AdminPeminjamanController::class, 'show'])->name('peminjaman.show');
-    Route::post('peminjaman/{peminjaman}/approve',    [AdminPeminjamanController::class, 'approve'])->name('peminjaman.approve');
-    Route::post('peminjaman/{peminjaman}/reject',     [AdminPeminjamanController::class, 'reject'])->name('peminjaman.reject');
+    Route::post('peminjaman/eksternal-instansi', [AdminPeminjamanController::class, 'storeExternalInstitution'])->name('peminjaman.externalInstitution.store');
+    Route::get('peminjaman-riwayat', [AdminPeminjamanController::class, 'riwayat'])->name('peminjaman.riwayat');
+    Route::get('peminjaman-arsip', [AdminPeminjamanController::class, 'arsip'])->name('peminjaman.arsip');
+    Route::get('peminjaman/{peminjaman}', [AdminPeminjamanController::class, 'show'])->name('peminjaman.show');
+    Route::post('peminjaman/{peminjaman}/approve', [AdminPeminjamanController::class, 'approve'])->name('peminjaman.approve');
+    Route::post('peminjaman/{peminjaman}/reject', [AdminPeminjamanController::class, 'reject'])->name('peminjaman.reject');
     Route::post('peminjaman/{peminjaman}/confirm-payment', [AdminPeminjamanController::class, 'confirmPayment'])->name('peminjaman.confirmPayment');
-    Route::post('peminjaman/{peminjaman}/checkout',   [AdminPeminjamanController::class, 'checkout'])->name('peminjaman.checkout');
+    Route::post('peminjaman/{peminjaman}/checkout', [AdminPeminjamanController::class, 'checkout'])->name('peminjaman.checkout');
 
     // Inventaris
-    Route::get('inventaris/{id_lab}',                        [AdminInventarisController::class, 'index'])->name('inventaris.index');
-    Route::post('inventaris/update',                         [AdminInventarisController::class, 'update'])->name('inventaris.update');
-    Route::post('inventaris/{id_lab}/pc',                    [AdminInventarisController::class, 'storePc'])->name('inventaris.pc.store');
-    Route::delete('inventaris/{id_lab}/pc/{id_meja}',        [AdminInventarisController::class, 'hapusPc'])->name('inventaris.pc.destroy');
-    Route::post('inventaris/{id_lab}/tambahan',               [AdminInventarisController::class, 'storeTambahan'])->name('inventaris.tambahan.store');
-    Route::delete('inventaris/{id_lab}/tambahan/{id_item}',   [AdminInventarisController::class, 'hapusTambahan'])->name('inventaris.tambahan.destroy');
-    Route::post('inventaris/{id_lab}/tambah-ac',             [AdminInventarisController::class, 'tambahAc'])->name('inventaris.tambahAc');
-    Route::get('inventaris/{id_lab}/hapus-ac/{id_ac}',       [AdminInventarisController::class, 'hapusAc'])->name('inventaris.hapusAc');
-    Route::post('inventaris/{id_lab}/simpan-periode',        [AdminInventarisController::class, 'simpanPeriode'])->name('inventaris.simpanPeriode');
-    Route::get('inventaris/{id_lab}/riwayat',                [AdminInventarisController::class, 'riwayat'])->name('inventaris.riwayat');
-    Route::get('inventaris-periode/{id_periode}',            [AdminInventarisController::class, 'detailPeriode'])->name('inventaris.detailPeriode');
-    Route::delete('inventaris/{id_lab}/riwayat/{id_periode}',[AdminInventarisController::class, 'hapusPeriode'])->name('inventaris.hapusPeriode');
-    Route::get('inventaris/{id_lab}/export',                 [AdminInventarisController::class, 'export'])->name('inventaris.export');
-    Route::get('inventaris-periode/{id_periode}/export',     [AdminInventarisController::class, 'exportPeriode'])->name('inventaris.exportPeriode');
+    Route::get('inventaris/{id_lab}', [AdminInventarisController::class, 'index'])->name('inventaris.index');
+    Route::post('inventaris/update', [AdminInventarisController::class, 'update'])->name('inventaris.update');
+    Route::post('inventaris/{id_lab}/pc', [AdminInventarisController::class, 'storePc'])->name('inventaris.pc.store');
+    Route::delete('inventaris/{id_lab}/pc/{id_meja}', [AdminInventarisController::class, 'hapusPc'])->name('inventaris.pc.destroy');
+    Route::post('inventaris/{id_lab}/tambahan', [AdminInventarisController::class, 'storeTambahan'])->name('inventaris.tambahan.store');
+    Route::delete('inventaris/{id_lab}/tambahan/{id_item}', [AdminInventarisController::class, 'hapusTambahan'])->name('inventaris.tambahan.destroy');
+    Route::post('inventaris/{id_lab}/tambah-ac', [AdminInventarisController::class, 'tambahAc'])->name('inventaris.tambahAc');
+    Route::get('inventaris/{id_lab}/hapus-ac/{id_ac}', [AdminInventarisController::class, 'hapusAc'])->name('inventaris.hapusAc');
+    Route::post('inventaris/{id_lab}/simpan-periode', [AdminInventarisController::class, 'simpanPeriode'])->name('inventaris.simpanPeriode');
+    Route::get('inventaris/{id_lab}/riwayat', [AdminInventarisController::class, 'riwayat'])->name('inventaris.riwayat');
+    Route::get('inventaris-periode/{id_periode}', [AdminInventarisController::class, 'detailPeriode'])->name('inventaris.detailPeriode');
+    Route::delete('inventaris/{id_lab}/riwayat/{id_periode}', [AdminInventarisController::class, 'hapusPeriode'])->name('inventaris.hapusPeriode');
+    Route::get('inventaris/{id_lab}/export', [AdminInventarisController::class, 'export'])->name('inventaris.export');
+    Route::get('inventaris-periode/{id_periode}/export', [AdminInventarisController::class, 'exportPeriode'])->name('inventaris.exportPeriode');
 
     // Akun Admin
-    Route::get('akun',            [AdminAkunController::class, 'index'])->name('akun.index');
-    Route::get('akun/create',     [AdminAkunController::class, 'create'])->name('akun.create');
-    Route::post('akun',           [AdminAkunController::class, 'store'])->name('akun.store');
-    Route::get('akun/{id}/edit',  [AdminAkunController::class, 'edit'])->name('akun.edit');
-    Route::put('akun/{id}',       [AdminAkunController::class, 'update'])->name('akun.update');
-    Route::delete('akun/{id}',    [AdminAkunController::class, 'destroy'])->name('akun.destroy');
+    Route::get('akun', [AdminAkunController::class, 'index'])->name('akun.index');
+    Route::get('akun/create', [AdminAkunController::class, 'create'])->name('akun.create');
+    Route::post('akun', [AdminAkunController::class, 'store'])->name('akun.store');
+    Route::get('akun/{id}/edit', [AdminAkunController::class, 'edit'])->name('akun.edit');
+    Route::put('akun/{id}', [AdminAkunController::class, 'update'])->name('akun.update');
+    Route::delete('akun/{id}', [AdminAkunController::class, 'destroy'])->name('akun.destroy');
 });
 
 /*
@@ -112,15 +119,15 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
 Route::middleware(['auth:mahasiswa'])->prefix('mahasiswa')->name('mahasiswa.')->group(function () {
 
     Route::get('/dashboard', [MahasiswaDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/profil',   [MahasiswaProfileController::class, 'edit'])->name('profil.edit');
-    Route::put('/profil',   [MahasiswaProfileController::class, 'update'])->name('profil.update');
-    Route::post('/logout',   [MahasiswaAuthController::class, 'logout'])->name('logout');
+    Route::get('/profil', [MahasiswaProfileController::class, 'edit'])->name('profil.edit');
+    Route::put('/profil', [MahasiswaProfileController::class, 'update'])->name('profil.update');
+    Route::post('/logout', [MahasiswaAuthController::class, 'logout'])->name('logout');
 
     // Peminjaman – seat check must be BEFORE wildcard {peminjaman}
-    Route::get('peminjaman/check-seats',      [MahasiswaPeminjamanController::class, 'checkSeats'])->name('peminjaman.checkSeats');
-    Route::get('peminjaman/create',           [MahasiswaPeminjamanController::class, 'create'])->name('peminjaman.create');
-    Route::post('peminjaman',                 [MahasiswaPeminjamanController::class, 'store'])->name('peminjaman.store');
-    Route::get('peminjaman-riwayat',          [MahasiswaPeminjamanController::class, 'riwayat'])->name('peminjaman.riwayat');
-    Route::get('peminjaman-arsip',            [MahasiswaPeminjamanController::class, 'arsip'])->name('peminjaman.arsip');
-    Route::get('peminjaman/{peminjaman}',     [MahasiswaPeminjamanController::class, 'show'])->name('peminjaman.show');
+    Route::get('peminjaman/check-seats', [MahasiswaPeminjamanController::class, 'checkSeats'])->name('peminjaman.checkSeats');
+    Route::get('peminjaman/create', [MahasiswaPeminjamanController::class, 'create'])->name('peminjaman.create');
+    Route::post('peminjaman', [MahasiswaPeminjamanController::class, 'store'])->name('peminjaman.store');
+    Route::get('peminjaman-riwayat', [MahasiswaPeminjamanController::class, 'riwayat'])->name('peminjaman.riwayat');
+    Route::get('peminjaman-arsip', [MahasiswaPeminjamanController::class, 'arsip'])->name('peminjaman.arsip');
+    Route::get('peminjaman/{peminjaman}', [MahasiswaPeminjamanController::class, 'show'])->name('peminjaman.show');
 });
